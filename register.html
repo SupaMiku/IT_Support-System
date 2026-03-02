@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Create Account – School IT Support System</title>
+  <link href="register.css" rel="stylesheet"/>
+</head>
+<body>
+  <div class="card">
+    <div class="noise-overlay"></div>
+
+    <header class="card__header">
+      <div class="gear-icon">⚙</div>
+      <h1 class="card__title">School IT Support System</h1>
+    </header>
+
+    <main class="card__body">
+
+      <div class="title-block">
+        <h1 class="page-title">CREATE ACCOUNT</h1>
+      </div>
+
+      <form class="register-form" onsubmit="return false;">
+
+        <div class="form-group">
+          <label class="form-label">NAME</label>
+          <div class="input-wrapper">
+            <span class="input-icon">👤</span>
+            <input type="text" class="form-input" placeholder="Enter your name" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">EMAIL</label>
+          <div class="input-wrapper">
+            <span class="input-icon">✉</span>
+            <input type="email" class="form-input" placeholder="Enter your email" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">PASSWORD</label>
+          <div class="input-wrapper">
+            <span class="input-icon">🔒</span>
+            <input type="password" class="form-input" placeholder="Enter your password" />
+          </div>
+        </div>
+
+        <button type="submit" class="btn-signup">SIGN UP</button>
+
+        <p class="login-redirect">
+          Already Registered?
+          <a href="login.html" class="redirect-link">Log in here.</a>
+        </p>
+
+      </form>
+    </main>
+  </div>
+</body>
+</html>

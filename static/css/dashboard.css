@@ -454,7 +454,6 @@ html, body {
 /* =====================
    DONUT CHART
    ===================== */
-.chart-panel .panel__head { }
 .donut-wrap {
   position: relative;
   width: 140px;
@@ -571,7 +570,7 @@ html, body {
 @media (max-width: 1200px) {
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .bottom-row { grid-template-columns: 1fr 1fr; }
-  .chart-panel { grid-column: span 2; display: flex; align-items: center; gap: 20px; }
+  .chart-panel { display: flex; align-items: center; gap: 20px; }
   .chart-panel .donut-wrap { margin: 12px 0 12px 18px; }
   .legend { padding: 0 18px; }
 }

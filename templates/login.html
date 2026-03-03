@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>School IT Support System</title>
-  <link href="login.css" rel="stylesheet"/>
+  <link href="/static/css/login.css" rel="stylesheet"/>
 </head>
 <body>
   <div class="card">
@@ -21,13 +21,13 @@
         <p class="welcome-sub">Log in to your Account.</p>
       </div>
 
-      <form class="login-form" onsubmit="return false;">
+      <form class="login-form">
 
         <div class="form-group">
           <label class="form-label">EMAIL</label>
           <div class="input-wrapper">
             <span class="input-icon">✉</span>
-            <input type="email" class="form-input" placeholder="Enter your email" />
+            <input type="email" class="form-input" placeholder="Enter your email" required/>
           </div>
         </div>
 
@@ -35,7 +35,7 @@
           <label class="form-label">PASSWORD</label>
           <div class="input-wrapper">
             <span class="input-icon">🔒</span>
-            <input type="password" class="form-input" placeholder="Enter your password" />
+            <input type="password" class="form-input" placeholder="Enter your password" required/>
           </div>
         </div>
 
@@ -43,11 +43,12 @@
 
         <div class="form-links">
           <a href="#" class="form-link">Forgot Password?</a>
-          <a href="register.html" class="form-link nav-link">Create Account</a>
+          <a href="/register" class="form-link nav-link">Create Account</a>
         </div>
 
       </form>
     </main>
   </div>
+  <script src="/static/auth.js"></script>
 </body>
 </html>

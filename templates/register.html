@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Create Account – School IT Support System</title>
-  <link href="register.css" rel="stylesheet"/>
+  <link href="/static/css/register.css" rel="stylesheet"/>
 </head>
 <body>
   <div class="card">
@@ -21,13 +21,13 @@
         <h1 class="page-title">CREATE ACCOUNT</h1>
       </div>
 
-      <form class="register-form" onsubmit="return false;">
+      <form class="register-form">
 
         <div class="form-group">
           <label class="form-label">NAME</label>
           <div class="input-wrapper">
             <span class="input-icon">👤</span>
-            <input type="text" class="form-input" placeholder="Enter your name" />
+            <input type="text" class="form-input" placeholder="Enter your name" required/>
           </div>
         </div>
 
@@ -35,7 +35,7 @@
           <label class="form-label">EMAIL</label>
           <div class="input-wrapper">
             <span class="input-icon">✉</span>
-            <input type="email" class="form-input" placeholder="Enter your email" />
+            <input type="email" class="form-input" placeholder="Enter your email" required/>
           </div>
         </div>
 
@@ -43,7 +43,7 @@
           <label class="form-label">PASSWORD</label>
           <div class="input-wrapper">
             <span class="input-icon">🔒</span>
-            <input type="password" class="form-input" placeholder="Enter your password" />
+            <input type="password" class="form-input" placeholder="Enter your password" required/>
           </div>
         </div>
 
@@ -51,11 +51,12 @@
 
         <p class="login-redirect">
           Already Registered?
-          <a href="login.html" class="redirect-link">Log in here.</a>
+          <a href="/login" class="redirect-link">Log in here.</a>
         </p>
 
       </form>
     </main>
   </div>
+  <script src="/static/auth.js"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 /* ===========================
    SCHOOL IT SUPPORT SYSTEM
-   Login Page – style.css
+   Create Account – register.css
    =========================== */
 
 *, *::before, *::after {
@@ -107,32 +107,25 @@ body {
 .card__body {
   position: relative;
   z-index: 1;
-  padding: 38px 44px 44px;
+  padding: 48px 44px 50px;
 }
 
-/* ---- Welcome ---- */
-.welcome-block {
+/* ---- Title ---- */
+.title-block {
   text-align: center;
-  margin-bottom: 34px;
+  margin-bottom: 36px;
 }
 
-.welcome-title {
+.page-title {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 3.2rem;
-  letter-spacing: 0.12em;
-  color: #e8e8e8;
+  font-size: 3rem;
+  letter-spacing: 0.16em;
+  color: #d8d8d8;
   line-height: 1;
 }
 
-.welcome-sub {
-  font-size: 0.95rem;
-  color: rgba(255,255,255,0.35);
-  letter-spacing: 0.05em;
-  margin-top: 6px;
-}
-
 /* ---- Form ---- */
-.login-form {
+.register-form {
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -189,8 +182,8 @@ body {
   box-shadow: 0 0 0 3px rgba(255,255,255,0.04);
 }
 
-/* ---- Login Button ---- */
-.btn-login {
+/* ---- Sign Up Button ---- */
+.btn-signup {
   margin-top: 8px;
   padding: 14px;
   background: linear-gradient(135deg, #2a2a2a 0%, #3a3a3a 100%);
@@ -204,33 +197,32 @@ body {
   transition: background 0.25s, border-color 0.25s, color 0.25s, box-shadow 0.25s;
 }
 
-.btn-login:hover {
+.btn-signup:hover {
   background: linear-gradient(135deg, #3c3c3c 0%, #4e4e4e 100%);
   border-color: rgba(255,255,255,0.25);
   color: #ffffff;
   box-shadow: 0 4px 20px rgba(0,0,0,0.5);
 }
 
-.btn-login:active {
+.btn-signup:active {
   transform: translateY(1px);
 }
 
-/* ---- Links ---- */
-.form-links {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 2px;
+/* ---- Redirect Link ---- */
+.login-redirect {
+  text-align: center;
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.03em;
 }
 
-.form-link {
-  font-size: 0.85rem;
+.redirect-link {
   color: #7ab3d4;
   text-decoration: none;
-  letter-spacing: 0.04em;
   transition: color 0.2s;
 }
 
-.form-link:hover {
+.redirect-link:hover {
   color: #a8d0ea;
   text-decoration: underline;
 }
@@ -246,15 +238,37 @@ body {
   to   { transform: rotate(360deg); }
 }
 
+/* ---- Messages ---- */
+.form-error {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: rgba(224,85,85,0.15);
+  border: 1px solid rgba(224,85,85,0.3);
+  border-radius: 3px;
+  color: #e05555;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  animation: fadeUp 0.3s ease both;
+}
+
+.form-success {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: rgba(76,175,130,0.15);
+  border: 1px solid rgba(76,175,130,0.3);
+  border-radius: 3px;
+  color: #4caf82;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  animation: fadeUp 0.3s ease both;
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 560px) {
   .card__body {
-    padding: 28px 24px 34px;
+    padding: 32px 24px 38px;
   }
-  .welcome-title {
-    font-size: 2.6rem;
-  }
-  .card__title {
-    font-size: 1.1rem;
+  .page-title {
+    font-size: 2.5rem;
   }
 }

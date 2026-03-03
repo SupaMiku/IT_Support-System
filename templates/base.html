@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}IT Support System{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages.css') }}"/>
+  {% block extra_css %}{% endblock %}
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar__brand"><span class="brand-gear">⚙</span><div class="brand-text"><span class="brand-title">SCHOOL IT</span><span class="brand-sub">Support System</span></div></div>
+  <nav class="sidebar__nav">
+    <p class="nav-section-label">MAIN</p>
+    <a href="{{ url_for('dashboard') }}" class="nav-item{% if request.path == url_for('dashboard') %} active{% endif %}"><span class="nav-icon">▣</span> Dashboard</a>
+    <a href="{{ url_for('tickets_page') }}" class="nav-item{% if request.path.startswith('/tickets') %} active{% endif %}"><span class="nav-icon">🎫</span> Tickets{% if ticket_count %}<span class="nav-badge">{{ ticket_count }}</span>{% endif %}</a>
+    <a href="{{ url_for('assets_page') }}" class="nav-item{% if request.path.startswith('/assets') %} active{% endif %}"><span class="nav-icon">🖥</span> Asset Inventory{% if asset_count %}<span class="nav-badge">{{ asset_count }}</span>{% endif %}</a>
+    <a href="{{ url_for('users_page') }}" class="nav-item{% if request.path.startswith('/users') %} active{% endif %}"><span class="nav-icon">👥</span> User Management{% if user_count %}<span class="nav-badge">{{ user_count }}</span>{% endif %}</a>
+    <p class="nav-section-label">SUPPORT</p>
+    <a href="{{ url_for('kb_page') }}" class="nav-item{% if request.path.startswith('/kb') %} active{% endif %}"><span class="nav-icon">📚</span> Knowledge Base</a>
+    <a href="{{ url_for('announcements_page') }}" class="nav-item{% if request.path.startswith('/announcements') %} active{% endif %}"><span class="nav-icon">📢</span> Announcements{% if announcement_count %}<span class="nav-badge new">{{ announcement_count }}</span>{% endif %}</a>
+    <a href="{{ url_for('reports_page') }}" class="nav-item{% if request.path.startswith('/reports') %} active{% endif %}"><span class="nav-icon">📊</span> Reports</a>
+    <p class="nav-section-label">SYSTEM</p>
+    <a href="#" class="nav-item"><span class="nav-icon">⚙</span> Settings</a>
+  </nav>
+  <div class="sidebar__footer">
+    <div class="user-avatar">{{ current_user.username[:2].upper() if current_user }}</div>
+    <div class="user-meta"><span class="user-name">{{ current_user.full_name if current_user }}</span><span class="user-role">{{ current_user.role.description if current_user and current_user.role }}</span></div>
+    <!-- simple GET endpoint defined in main.py that clears session and redirects -->
+    <a href="{{ url_for('logout_page') }}" class="logout-btn">⏻</a>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+    <div class="topbar__left"><h2 class="page-heading">{% block page_heading %}{% endblock %}</h2><span class="page-sub">{% block page_sub %}{% endblock %}</span></div>
+    <div class="topbar__right">
+      {% block topbar %}{% endblock %}
+      <!-- clicking avatar opens profile -->
+      <a href="{{ url_for('profile_page') }}" class="topbar-avatar" title="Profile">{{ current_user.username[:2].upper() if current_user }}</a>
+    </div>
+  </header>
+
+  <div class="page-content">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<script>
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function showToast(msg, type='') {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = '✔  ' + msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+document.querySelectorAll('.menu-toggle').forEach(btn => btn.addEventListener('click', () => {
+  document.getElementById('sidebar').classList.toggle('open');
+}));
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if(e.target === o) o.classList.remove('open'); });
+});
+</script>
+</body>
+</html>

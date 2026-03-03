@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile – {{ user.full_name }}{% endblock %}
+
+{% block page_heading %}My Profile{% endblock %}
+{% block page_sub %}View and edit your account information{% endblock %}
+
+{% block content %}
+<div class="panel" style="max-width:600px; margin:auto">
+  <div class="panel__head"><span class="panel__title">{{ user.full_name }}</span></div>
+  <div class="panel__body" style="padding:20px">
+    <p><strong>Username:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Role:</strong> {{ user.role.name if user.role else 'N/A' }}</p>
+    <p><strong>Department:</strong> {{ user.department or 'N/A' }}</p>
+    <p><strong>Phone:</strong> {{ user.phone or 'N/A' }}</p>
+    <p><strong>Last login:</strong> {{ user.last_login or 'Never' }}</p>
+  </div>
+  <div class="panel__foot" style="text-align:right">
+    <a href="{{ url_for('logout_page') }}" class="btn btn-danger">Logout</a>
+  </div>
+</div>
+{% endblock %}

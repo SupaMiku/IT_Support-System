@@ -1,0 +1,539 @@
+{% extends 'base.html' %}
+
+{% block title %}Tickets – School IT Support System{% endblock %}
+
+{% block page_heading %}Ticket Management{% endblock %}
+{% block page_sub %}Track, assign and resolve IT support requests{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tickets.css') }}"/>
+{% endblock %}
+
+{% block content %}
+
+<!-- Header with stats and create button -->
+<div class="tickets-header">
+  <div class="tickets-stats">
+    <div class="stat-box">
+      <span class="stat-label">Open</span>
+      <span class="stat-number">{{ ticket_stats.open }}</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-label">In Progress</span>
+      <span class="stat-number">{{ ticket_stats.in_progress }}</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-label">Resolved</span>
+      <span class="stat-number">{{ ticket_stats.resolved }}</span>
+    </div>
+    <div class="stat-box critical">
+      <span class="stat-label">Critical</span>
+      <span class="stat-number">{{ ticket_stats.critical }}</span>
+    </div>
+  </div>
+  <button class="btn-primary" onclick="openCreateModal()">+ New Ticket</button>
+</div>
+
+<!-- Filters -->
+<div class="tickets-filters">
+  <input type="text" id="searchInput" placeholder="Search tickets…" onkeyup="applyFilters()">
+  <select id="statusFilter" onchange="applyFilters()">
+    <option value="">All Status</option>
+    <option value="open">Open</option>
+    <option value="in_progress">In Progress</option>
+    <option value="on_hold">On Hold</option>
+    <option value="resolved">Resolved</option>
+    <option value="closed">Closed</option>
+  </select>
+  <select id="priorityFilter" onchange="applyFilters()">
+    <option value="">All Priority</option>
+    <option value="low">Low</option>
+    <option value="medium">Medium</option>
+    <option value="high">High</option>
+    <option value="critical">Critical</option>
+  </select>
+  <select id="categoryFilter" onchange="applyFilters()">
+    <option value="">All Category</option>
+    <option value="hardware">Hardware</option>
+    <option value="software">Software</option>
+    <option value="network">Network</option>
+    <option value="account">Account</option>
+    <option value="other">Other</option>
+  </select>
+</div>
+
+<!-- Tickets Table -->
+<div class="tickets-container">
+  <table class="tickets-table" id="ticketsTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Title</th>
+        <th>Requester</th>
+        <th>Category</th>
+        <th>Priority</th>
+        <th>Status</th>
+        <th>Assigned To</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="ticketsList">
+      <!-- Loaded dynamically -->
+    </tbody>
+  </table>
+  <div id="noTickets" class="no-data" style="display:none;">
+    <div class="empty-icon">📭</div>
+    <div class="empty-text">No tickets found</div>
+  </div>
+</div>
+
+<!-- CREATE TICKET MODAL -->
+<div id="createModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Create New Ticket</h2>
+      <button class="close-btn" onclick="closeCreateModal()">&times;</button>
+    </div>
+    <form id="createForm" onsubmit="submitCreateTicket(event)">
+      <div class="form-group">
+        <label>Title *</label>
+        <input type="text" id="titleInput" required placeholder="Brief title of the issue">
+      </div>
+      <div class="form-group">
+        <label>Description *</label>
+        <textarea id="descriptionInput" required placeholder="Detailed description of the problem" rows="4"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category</label>
+          <select id="categoryInput" required>
+            <option value="other">Other</option>
+            <option value="hardware">Hardware</option>
+            <option value="software">Software</option>
+            <option value="network">Network</option>
+            <option value="account">Account</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Priority</label>
+          <select id="priorityInput" required>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" id="locationInput" placeholder="e.g., Room 204, Lab 3">
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" onclick="closeCreateModal()">Cancel</button>
+        <button type="submit" class="btn-primary">Create Ticket</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TICKET DETAIL MODAL -->
+<div id="detailModal" class="modal">
+  <div class="modal-content modal-large">
+    <div class="modal-header">
+      <h2>Ticket #<span id="detailId">0</span></h2>
+      <button class="close-btn" onclick="closeDetailModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-grid">
+        <!-- Left side: Ticket info -->
+        <div class="detail-left">
+          <div class="detail-section">
+            <h3 id="detailTitle">Title</h3>
+            <p id="detailDescription" class="detail-description">Description</p>
+            
+            <div class="detail-meta">
+              <div class="meta-item">
+                <span class="meta-label">Status</span>
+                <select id="detailStatus" onchange="updateTicketField('status')">
+                  <option value="open">Open</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="on_hold">On Hold</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Priority</span>
+                <select id="detailPriority" onchange="updateTicketField('priority')">
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Category</span>
+                <span id="detailCategory">Category</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Location</span>
+                <span id="detailLocation">-</span>
+              </div>
+            </div>
+
+            <div class="detail-meta">
+              <div class="meta-item">
+                <span class="meta-label">Requester</span>
+                <span id="detailRequester">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Assigned To</span>
+                <select id="detailAssignedTo" onchange="updateTicketField('assigned_to_id')">
+                  <option value="">Unassigned</option>
+                </select>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Created</span>
+                <span id="detailCreated">-</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">Updated</span>
+                <span id="detailUpdated">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right side: Comments -->
+        <div class="detail-right">
+          <div class="comments-section">
+            <h3>Comments & Updates</h3>
+            <div class="comments-list" id="commentsList">
+              <!-- Comments loaded dynamically -->
+            </div>
+            <div class="comment-form">
+              <textarea id="commentInput" placeholder="Add a comment…" rows="3"></textarea>
+              <button class="btn-small" onclick="addComment()">Post Comment</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-danger" onclick="deleteTicket()">Delete Ticket</button>
+      <button type="button" class="btn-secondary" onclick="closeDetailModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = '/api/tickets';
+let allTickets = [];
+let staffUsers = [];
+let currentTicketId = null;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadStaffUsers();
+  await loadTickets();
+});
+
+// ── LOAD DATA ────────────────────────────────────────
+async function loadStaffUsers() {
+  try {
+    const response = await fetch('/api/users/staff');
+    staffUsers = await response.json();
+    const select = document.getElementById('detailAssignedTo');
+    staffUsers.forEach(user => {
+      const option = document.createElement('option');
+      option.value = user.id;
+      option.textContent = user.full_name;
+      select.appendChild(option);
+    });
+  } catch (e) {
+    console.error('Error loading staff users:', e);
+  }
+}
+
+async function loadTickets() {
+  try {
+    const response = await fetch(`${API_BASE}/`);
+    if (!response.ok) throw new Error('Failed to load tickets');
+    allTickets = await response.json();
+    renderTickets(allTickets);
+  } catch (e) {
+    console.error('Error loading tickets:', e);
+  }
+}
+
+function renderTickets(tickets) {
+  const tbody = document.getElementById('ticketsList');
+  const noData = document.getElementById('noTickets');
+  
+  tbody.innerHTML = '';
+  if (tickets.length === 0) {
+    noData.style.display = 'flex';
+    return;
+  }
+  noData.style.display = 'none';
+
+  tickets.forEach(ticket => {
+    const row = document.createElement('tr');
+    row.className = `priority-${ticket.priority}`;
+    row.onclick = () => openDetailModal(ticket.id);
+    
+    const createdDate = new Date(ticket.created_at).toLocaleDateString();
+    const statusClass = `status-${ticket.status.replace('_', '-')}`;
+    const priorityClass = `priority-${ticket.priority}`;
+    
+    row.innerHTML = `
+      <td class="ticket-id">#${ticket.id}</td>
+      <td class="ticket-title">${escapeHtml(ticket.title)}</td>
+      <td>${ticket.requester || '-'}</td>
+      <td><span class="badge category">${ticket.category}</span></td>
+      <td><span class="badge ${priorityClass}">${ticket.priority}</span></td>
+      <td><span class="badge ${statusClass}">${ticket.status.replace('_', ' ')}</span></td>
+      <td>${ticket.assigned_to || 'Unassigned'}</td>
+      <td>${createdDate}</td>
+      <td class="actions-cell" onclick="event.stopPropagation()">
+        <button class="btn-icon" onclick="openDetailModal(${ticket.id})" title="View">👁️</button>
+        <button class="btn-icon" onclick="deleteTicketQuick(${ticket.id})" title="Delete">🗑️</button>
+      </td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+// ── CREATE TICKET ────────────────────────────────────
+function openCreateModal() {
+  document.getElementById('createModal').style.display = 'flex';
+  document.getElementById('createForm').reset();
+}
+
+function closeCreateModal() {
+  document.getElementById('createModal').style.display = 'none';
+}
+
+async function submitCreateTicket(event) {
+  event.preventDefault();
+  
+  const payload = {
+    title: document.getElementById('titleInput').value,
+    description: document.getElementById('descriptionInput').value,
+    category: document.getElementById('categoryInput').value,
+    priority: document.getElementById('priorityInput').value,
+    location: document.getElementById('locationInput').value || null
+  };
+
+  try {
+    const response = await fetch(`${API_BASE}/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const ticket = await response.json();
+    closeCreateModal();
+    await loadTickets();
+    alert(`✅ Ticket #${ticket.id} created successfully!`);
+  } catch (e) {
+    alert(`❌ Error creating ticket: ${e.message}`);
+    console.error(e);
+  }
+}
+
+// ── VIEW/EDIT TICKET ─────────────────────────────────
+async function openDetailModal(ticketId) {
+  currentTicketId = ticketId;
+  document.getElementById('detailModal').style.display = 'flex';
+
+  try {
+    const response = await fetch(`${API_BASE}/${ticketId}`);
+    if (!response.ok) throw new Error('Ticket not found');
+    const ticket = await response.json();
+
+    document.getElementById('detailId').textContent = ticket.id;
+    document.getElementById('detailTitle').textContent = ticket.title;
+    document.getElementById('detailDescription').textContent = ticket.description;
+    document.getElementById('detailCategory').textContent = ticket.category;
+    document.getElementById('detailLocation').textContent = ticket.location || '-';
+    document.getElementById('detailRequester').textContent = ticket.requester || '-';
+    document.getElementById('detailStatus').value = ticket.status;
+    document.getElementById('detailPriority').value = ticket.priority;
+    document.getElementById('detailAssignedTo').value = ticket.assigned_to_id || '';
+    document.getElementById('detailCreated').textContent = new Date(ticket.created_at).toLocaleString();
+    document.getElementById('detailUpdated').textContent = new Date(ticket.updated_at).toLocaleString();
+
+    await loadComments(ticketId);
+  } catch (e) {
+    alert(`❌ Error loading ticket: ${e.message}`);
+    closeDetailModal();
+  }
+}
+
+function closeDetailModal() {
+  document.getElementById('detailModal').style.display = 'none';
+  currentTicketId = null;
+}
+
+async function updateTicketField(field) {
+  if (!currentTicketId) return;
+
+  let value;
+  if (field === 'status') {
+    value = document.getElementById('detailStatus').value;
+  } else if (field === 'priority') {
+    value = document.getElementById('detailPriority').value;
+  } else if (field === 'assigned_to_id') {
+    value = document.getElementById('detailAssignedTo').value;
+    if (value === '') value = null;
+  }
+
+  const payload = { [field]: value };
+
+  try {
+    const response = await fetch(`${API_BASE}/${currentTicketId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    
+    await loadTickets();
+    alert('✅ Ticket updated successfully!');
+  } catch (e) {
+    alert(`❌ Error updating ticket: ${e.message}`);
+    await openDetailModal(currentTicketId);
+  }
+}
+
+// ── COMMENTS ─────────────────────────────────────────
+async function loadComments(ticketId) {
+  try {
+    const response = await fetch(`${API_BASE}/${ticketId}/comments`);
+    if (!response.ok) throw new Error('Failed to load comments');
+    const comments = await response.json();
+    
+    const list = document.getElementById('commentsList');
+    list.innerHTML = '';
+    
+    if (comments.length === 0) {
+      list.innerHTML = '<div class="no-comments">No comments yet</div>';
+      return;
+    }
+
+    comments.forEach(comment => {
+      const div = document.createElement('div');
+      div.className = 'comment-item';
+      const createdDate = new Date(comment.created_at).toLocaleString();
+      div.innerHTML = `
+        <div class="comment-header">
+          <strong>${escapeHtml(comment.author)}</strong>
+          <span class="comment-time">${createdDate}</span>
+          ${comment.is_internal ? '<span class="badge internal">Internal</span>' : ''}
+        </div>
+        <div class="comment-body">${escapeHtml(comment.content)}</div>
+      `;
+      list.appendChild(div);
+    });
+  } catch (e) {
+    console.error('Error loading comments:', e);
+  }
+}
+
+async function addComment() {
+  if (!currentTicketId) return;
+  
+  const content = document.getElementById('commentInput').value.trim();
+  if (!content) {
+    alert('Please enter a comment');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/${currentTicketId}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    
+    document.getElementById('commentInput').value = '';
+    await loadComments(currentTicketId);
+  } catch (e) {
+    alert(`❌ Error adding comment: ${e.message}`);
+  }
+}
+
+// ── DELETE TICKET ────────────────────────────────────
+async function deleteTicket() {
+  if (!currentTicketId) return;
+  if (!confirm('⚠️ Are you sure you want to delete this ticket? This cannot be undone.')) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/${currentTicketId}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    
+    closeDetailModal();
+    await loadTickets();
+    alert('✅ Ticket deleted successfully!');
+  } catch (e) {
+    alert(`❌ Error deleting ticket: ${e.message}`);
+  }
+}
+
+async function deleteTicketQuick(ticketId) {
+  if (!confirm('⚠️ Delete this ticket?')) return;
+  try {
+    const response = await fetch(`${API_BASE}/${ticketId}`, {
+      method: 'DELETE'
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    await loadTickets();
+  } catch (e) {
+    alert(`❌ Error: ${e.message}`);
+  }
+}
+
+// ── FILTERS ──────────────────────────────────────────
+function applyFilters() {
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  const status = document.getElementById('statusFilter').value;
+  const priority = document.getElementById('priorityFilter').value;
+  const category = document.getElementById('categoryFilter').value;
+
+  const filtered = allTickets.filter(ticket => {
+    const matchesSearch = ticket.title.toLowerCase().includes(searchTerm) ||
+                         ticket.description.toLowerCase().includes(searchTerm) ||
+                         ticket.id.toString().includes(searchTerm);
+    const matchesStatus = !status || ticket.status === status;
+    const matchesPriority = !priority || ticket.priority === priority;
+    const matchesCategory = !category || ticket.category === category;
+
+    return matchesSearch && matchesStatus && matchesPriority && matchesCategory;
+  });
+
+  renderTickets(filtered);
+}
+
+// ── UTILITY FUNCTIONS ────────────────────────────────
+function escapeHtml(text) {
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
+</script>
+
+{% endblock %}

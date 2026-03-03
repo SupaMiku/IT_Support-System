@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Knowledge Base – School IT Support System</title>
+  <link rel="stylesheet" href="pages.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar__brand"><span class="brand-gear">⚙</span><div class="brand-text"><span class="brand-title">SCHOOL IT</span><span class="brand-sub">Support System</span></div></div>
+  <nav class="sidebar__nav">
+    <p class="nav-section-label">MAIN</p>
+    <a href="{{ url_for('dashboard') }}" class="nav-item"><span class="nav-icon">▣</span> Dashboard</a>
+    <a href="{{ url_for('tickets_page') }}"   class="nav-item"><span class="nav-icon">🎫</span> Tickets<span class="nav-badge">12</span></a>
+    <a href="{{ url_for('assets_page') }}"    class="nav-item"><span class="nav-icon">🖥</span> Asset Inventory</a>
+    <a href="{{ url_for('users_page') }}"     class="nav-item"><span class="nav-icon">👥</span> User Management</a>
+    <p class="nav-section-label">SUPPORT</p>
+    <a href="kb.html"            class="nav-item active"><span class="nav-icon">📚</span> Knowledge Base</a>
+    <a href="announcements.html" class="nav-item"><span class="nav-icon">📢</span> Announcements<span class="nav-badge new">3</span></a>
+    <a href="reports.html"       class="nav-item"><span class="nav-icon">📊</span> Reports</a>
+    <p class="nav-section-label">SYSTEM</p>
+    <a href="#" class="nav-item"><span class="nav-icon">⚙</span> Settings</a>
+  </nav>
+  <div class="sidebar__footer">
+    <div class="user-avatar">AD</div>
+    <div class="user-meta"><span class="user-name">Admin User</span><span class="user-role">IT Administrator</span></div>
+    <a href="index.html" class="logout-btn">⏻</a>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+    <div class="topbar__left"><h2 class="page-heading">Knowledge Base</h2><span class="page-sub">Self-service IT guides and how-to articles</span></div>
+    <div class="topbar__right">
+      <div class="search-box"><span>🔍</span><input type="text" placeholder="Search articles…" oninput="filterKB(this.value)"/></div>
+      <button class="icon-btn">🔔<span class="notif-dot"></span></button>
+      <div class="topbar-avatar">AD</div>
+    </div>
+  </header>
+
+  <div class="page-content">
+
+    <div class="stats-row">
+      <div class="stat-mini" style="--d:.05s"><div class="stat-mini__icon" style="background:rgba(122,179,212,.12)">📄</div><div><div class="stat-mini__val">24</div><div class="stat-mini__label">Total Articles</div></div></div>
+      <div class="stat-mini" style="--d:.1s"> <div class="stat-mini__icon" style="background:rgba(76,175,130,.12)">✔</div><div><div class="stat-mini__val">20</div><div class="stat-mini__label">Published</div></div></div>
+      <div class="stat-mini" style="--d:.15s"><div class="stat-mini__icon" style="background:rgba(224,168,64,.12)">👁</div><div><div class="stat-mini__val">1.4k</div><div class="stat-mini__label">Total Views</div></div></div>
+      <div class="stat-mini" style="--d:.2s"> <div class="stat-mini__icon" style="background:rgba(176,127,212,.12)">✏</div><div><div class="stat-mini__val">4</div><div class="stat-mini__label">Drafts</div></div></div>
+    </div>
+
+    <!-- Filter + New -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <button class="btn btn-ghost cat-btn active-cat" data-cat="all" onclick="filterCat(this,'all')">All</button>
+        <button class="btn btn-ghost cat-btn" data-cat="network"  onclick="filterCat(this,'network')">🌐 Network</button>
+        <button class="btn btn-ghost cat-btn" data-cat="hardware" onclick="filterCat(this,'hardware')">🖥 Hardware</button>
+        <button class="btn btn-ghost cat-btn" data-cat="software" onclick="filterCat(this,'software')">💾 Software</button>
+        <button class="btn btn-ghost cat-btn" data-cat="account"  onclick="filterCat(this,'account')">👤 Account</button>
+        <button class="btn btn-ghost cat-btn" data-cat="general"  onclick="filterCat(this,'general')">📋 General</button>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-primary" onclick="openModal('articleModal')">➕ New Article</button>
+      </div>
+    </div>
+
+    <!-- Article Cards -->
+    <div class="kb-grid" id="kbGrid">
+
+      <div class="kb-card" data-cat="network" onclick="openModal('readModal')">
+        <div class="kb-card__cat">🌐 Network</div>
+        <div class="kb-card__title">How to Connect to SchoolNet WiFi</div>
+        <div class="kb-card__excerpt">Step-by-step guide to connecting your device to the school wireless network using your student or faculty credentials.</div>
+        <div class="kb-card__foot"><span class="kb-card__views">👁 145 views</span><span class="kb-card__author">by Admin</span></div>
+      </div>
+
+      <div class="kb-card" data-cat="account" onclick="openModal('readModal')">
+        <div class="kb-card__cat">👤 Account</div>
+        <div class="kb-card__title">Resetting Your School Email Password</div>
+        <div class="kb-card__excerpt">How to recover access to your school email account using the self-service portal or by contacting IT support.</div>
+        <div class="kb-card__foot"><span class="kb-card__views">👁 230 views</span><span class="kb-card__author">by Admin</span></div>
+      </div>
+
+      <div class="kb-card" data-cat="hardware" onclick="openModal('readModal')">
+        <div class="kb-card__cat">🖥 Hardware</div>
+        <div class="kb-card__title">Troubleshooting a Printer Offline Error</div>
+        <div class="kb-card__excerpt">Fix common printer offline issues in Windows without calling IT support. Covers queue clearing and driver reset steps.</div>
+        <div class="kb-card__foot"><span class="kb-card__views">👁 89 views</span><span class="kb-card__author">by IT Staff</span></div>
+      </div>
+
+      <div class="kb-card" data-cat="software" onclick="openModal('readModal')">
+        <div class="kb-card__cat">💾 Software</div>
+        <div class="kb-card__title">Installing Microsoft Office on School Laptops</div>
+        <div class="kb-card__excerpt">Instructions for activating and installing MS Office 365 using your school-issued license key and account credentials.</div>
+        <div class="kb-card__foot"><span class="kb-card__views">👁 178 views</span><span class="kb-card__author">by IT Staff</span></div>
+      </div>
+
+      <div class="kb-card" data-cat="network" onclick="openModal('readModal')">
+        <div class="kb-card__cat">🌐 Network</div>
+        <div class="kb-card__title">Setting Up a VPN for Remote Access</div>
+        <div class="kb-card__excerpt">How to configure the school VPN client on Windows and Mac to securely access school resources from home.</div>
+        <div class="kb-card__foot"><span class="kb-card__views">👁 63 views</span><span class="kb-card__author">by Admin</span></div>
+      </div>
+
+      <div class="kb-card" data-cat="general" onclick="openModal('readModal')">
+        <div class="kb-card__cat">📋 General</div>
+        <div class="kb-card__title">How to Submit an IT Support Ticket</div>
+        <div class="kb-card__excerpt">Learn how to properly submit a support request including what information to include for faster resolution.</div>
+        <div class="kb-card__foot"><span class="kb-card__views">👁 312 views</span><span class="kb-card__author">by Admin</span></div>
+      </div>
+
+      <div class="kb-card" data-cat="hardware" onclick="openModal('readModal')">
+        <div class="kb-card__cat">🖥 Hardware</div>
+        <div class="kb-card__title">Projector Setup and Troubleshooting</div>
+        <div class="kb-card__excerpt">How to connect your laptop to a classroom projector via HDMI or wireless display, and fix common display issues.</div>
+        <div class="kb-card__foot"><span class="kb-card__views">👁 97 views</span><span class="kb-card__author">by IT Staff</span></div>
+      </div>
+
+      <div class="kb-card" data-cat="account" onclick="openModal('readModal')">
+        <div class="kb-card__cat">👤 Account</div>
+        <div class="kb-card__title">Setting Up Two-Factor Authentication</div>
+        <div class="kb-card__excerpt">Secure your school account with 2FA using the Microsoft Authenticator app for added protection against unauthorized access.</div>
+        <div class="kb-card__foot"><span class="kb-card__views">👁 54 views</span><span class="kb-card__author">by Admin</span></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- READ ARTICLE MODAL -->
+<div class="modal-overlay" id="readModal">
+  <div class="modal" style="max-width:620px">
+    <div class="modal__head">
+      <span class="modal__title">How to Connect to SchoolNet WiFi</span>
+      <button class="modal__close" onclick="closeModal('readModal')">✕</button>
+    </div>
+    <div class="modal__body">
+      <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+        <span class="kb-card__cat" style="font-size:.72rem;letter-spacing:.14em;color:var(--accent)">🌐 NETWORK</span>
+        <span style="font-size:.75rem;color:var(--text-dim)">By Admin · 145 views · Published Mar 1, 2025</span>
+      </div>
+      <div style="font-size:.9rem;line-height:1.75;color:var(--text-dim)">
+        <p style="margin-bottom:12px">Follow these steps to connect your device to the school's wireless network <strong style="color:var(--text)">SchoolNet</strong>:</p>
+        <ol style="padding-left:20px;display:flex;flex-direction:column;gap:8px">
+          <li>Click the <strong style="color:var(--text)">WiFi icon</strong> on your system taskbar (bottom-right on Windows, top-right on Mac).</li>
+          <li>Select <strong style="color:var(--text)">SchoolNet</strong> from the list of available networks.</li>
+          <li>When prompted, enter your <strong style="color:var(--text)">school email</strong> as the username and your <strong style="color:var(--text)">account password</strong>.</li>
+          <li>Click <strong style="color:var(--text)">Connect</strong>. Your device will authenticate and connect within a few seconds.</li>
+          <li>If prompted about a security certificate, click <strong style="color:var(--text)">Accept / Trust</strong>.</li>
+        </ol>
+        <p style="margin-top:14px;padding:12px;background:var(--bg3);border-left:3px solid var(--warn);border-radius:0 3px 3px 0;font-size:.82rem">
+          ⚠ If you continue to experience connection issues, please <a href="{{ url_for('tickets_page') }}" style="color:var(--accent)">submit a support ticket</a> with your device type and error message.
+        </p>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('readModal')">Close</button>
+      <button class="btn btn-ghost btn-sm" onclick="openModal('articleModal');closeModal('readModal')">✏ Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW / EDIT ARTICLE MODAL -->
+<div class="modal-overlay" id="articleModal">
+  <div class="modal" style="max-width:600px">
+    <div class="modal__head"><span class="modal__title">New Article</span><button class="modal__close" onclick="closeModal('articleModal')">✕</button></div>
+    <div class="modal__body">
+      <div class="form-row">
+        <div class="form-group full"><label class="form-label">Title</label><input class="form-control" placeholder="Article title…"/></div>
+        <div class="form-group"><label class="form-label">Category</label><select class="form-control"><option>General</option><option>Network</option><option>Hardware</option><option>Software</option><option>Account</option></select></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-control"><option>Draft</option><option>Published</option></select></div>
+        <div class="form-group full"><label class="form-label">Content</label><textarea class="form-control" style="min-height:160px" placeholder="Write article content here…"></textarea></div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn btn-ghost" onclick="closeModal('articleModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="showToast('Article saved!');closeModal('articleModal')">Save Article</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.cat-btn { font-size:.8rem; padding:6px 12px; }
+.active-cat { background:var(--accent-bg)!important; border-color:var(--accent)!important; color:var(--accent)!important; }
+</style>
+
+<script>
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function showToast(msg) {
+  const t=document.createElement('div'); t.className='toast'; t.textContent='✔  '+msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
+}
+function filterKB(val) {
+  val = val.toLowerCase();
+  document.querySelectorAll('.kb-card').forEach(c => {
+    c.style.display = c.textContent.toLowerCase().includes(val) ? '' : 'none';
+  });
+}
+function filterCat(btn, cat) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active-cat'));
+  btn.classList.add('active-cat');
+  document.querySelectorAll('.kb-card').forEach(c => {
+    c.style.display = (cat === 'all' || c.dataset.cat === cat) ? '' : 'none';
+  });
+}
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
+});
+</script>
+</body>
+</html>

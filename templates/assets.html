@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+
+{% block title %}Assets – School IT Support System{% endblock %}
+
+{% block page_heading %}Asset Inventory{% endblock %}
+{% block page_sub %}Manage all school hardware and devices{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assets.css') }}"/>
+{% endblock %}
+
+{% block content %}
+  <div class="sidebar__brand"><span class="brand-gear">⚙</span><div class="brand-text"><span class="brand-title">SCHOOL IT</span><span class="brand-sub">Support System</span></div></div>
+  <nav class="sidebar__nav">
+    <p class="nav-section-label">MAIN</p>
+    <a href="{{ url_for('dashboard') }}" class="nav-item"><span class="nav-icon">▣</span> Dashboard</a>
+    <a href="{{ url_for('tickets_page') }}"   class="nav-item"><span class="nav-icon">🎫</span> Tickets<span class="nav-badge">12</span></a>
+    <a href="{{ url_for('assets_page') }}"    class="nav-item active"><span class="nav-icon">🖥</span> Asset Inventory</a>
+    <a href="{{ url_for('users_page') }}"     class="nav-item"><span class="nav-icon">👥</span> User Management</a>
+    <p class="nav-section-label">SUPPORT</p>
+    <a href="kb.html"            class="nav-item"><span class="nav-icon">📚</span> Knowledge Base</a>
+    <a href="announcements.html" class="nav-item"><span class="nav-icon">📢</span> Announcements<span class="nav-badge new">3</span></a>
+    <a href="reports.html"       class="nav-item"><span class="nav-icon">📊</span> Reports</a>
+    <p class="nav-section-label">SYSTEM</p>
+    <a href="#" class="nav-item"><span class="nav-icon">⚙</span> Settings</a>
+  </nav>
+  <div class="sidebar__footer">
+    <div class="user-avatar">AD</div>
+    <div class="user-meta"><span class="user-name">Admin User</span><span class="user-role">IT Administrator</span></div>
+    <a href="index.html" class="logout-btn">⏻</a>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+    <div class="topbar__left"><h2 class="page-heading">Asset Inventory</h2><span class="page-sub">Manage all school hardware and devices</span></div>
+    <div class="topbar__right">
+      <div class="search-box"><span>🔍</span><input type="text" placeholder="Search assets…" oninput="filterTable(this.value)"/></div>
+      <button class="icon-btn">🔔<span class="notif-dot"></span></button>
+      <div class="topbar-avatar">AD</div>
+    </div>
+  </header>
+
+  <div class="page-content">
+
+    <div class="stats-row">
+      <div class="stat-mini" style="--d:.05s"><div class="stat-mini__icon" style="background:rgba(76,175,130,.12)">🖥</div><div><div class="stat-mini__val">312</div><div class="stat-mini__label">Total Assets</div></div></div>
+      <div class="stat-mini" style="--d:.1s"> <div class="stat-mini__icon" style="background:rgba(122,179,212,.12)">✔</div><div><div class="stat-mini__val">278</div><div class="stat-mini__label">Active</div></div></div>
+      <div class="stat-mini" style="--d:.15s"><div class="stat-mini__icon" style="background:rgba(224,168,64,.12)">🔧</div><div><div class="stat-mini__val">18</div><div class="stat-mini__label">Maintenance</div></div></div>
+      <div class="stat-mini" style="--d:.2s"> <div class="stat-mini__icon" style="background:rgba(224,85,85,.12)">⚠</div><div><div class="stat-mini__val">16</div><div class="stat-mini__label">Inactive</div></div></div>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <select class="filter-select"><option value="">All Categories</option><option>Computer</option><option>Laptop</option><option>Printer</option><option>Projector</option><option>Network</option><option>Server</option></select>
+        <select class="filter-select"><option value="">All Status</option><option>Active</option><option>Inactive</option><option>Maintenance</option><option>Retired</option></select>
+        <input class="filter-input" placeholder="Filter by location…"/>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-ghost">⬇ Export</button>
+        <button class="btn btn-primary" onclick="openModal('addAssetModal')">➕ Add Asset</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel__head">
+        <span class="panel__title">All Assets</span>
+        <span style="font-size:.78rem;color:var(--text-dim)">312 total</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="data-table" id="assetTable">
+          <thead>
+            <tr><th>Asset Tag</th><th>Name</th><th>Category</th><th>Brand / Model</th><th>Serial No.</th><th>Location</th><th>Assigned To</th><th>Status</th><th>Purchase Date</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="asset-tag-cell">PC-LAB1-01</span></td>
+              <td>Desktop PC</td><td>Computer</td><td>Acer Aspire TC</td><td>SN001</td><td>Computer Lab 1</td><td>—</td>
+              <td><span class="status-badge status-active">Active</span></td><td>Jun 2022</td>
+              <td><div class="table-actions"><button class="btn btn-ghost btn-sm" onclick="openModal('viewAssetModal')">View</button><button class="btn btn-ghost btn-sm">Edit</button></div></td>
+            </tr>
+            <tr>
+              <td><span class="asset-tag-cell">PC-LAB3-07</span></td>
+              <td>Desktop PC</td><td>Computer</td><td>Dell OptiPlex 3080</td><td>SN007</td><td>Computer Lab 3</td><td>—</td>
+              <td><span class="status-badge status-maintenance">Maintenance</span></td><td>Mar 2021</td>
+              <td><div class="table-actions"><button class="btn btn-ghost btn-sm" onclick="openModal('viewAssetModal')">View</button><button class="btn btn-ghost btn-sm">Edit</button></div></td>
+            </tr>
+            <tr>
+              <td><span class="asset-tag-cell">LPT-ADMIN-01</span></td>
+              <td>Laptop</td><td>Laptop</td><td>Lenovo ThinkPad E14</td><td>SN050</td><td>Admin Office</td><td>Admin User</td>
+              <td><span class="status-badge status-active">Active</span></td><td>Jan 2023</td>
+              <td><div class="table-actions"><button class="btn btn-ghost btn-sm" onclick="openModal('viewAssetModal')">View</button><button class="btn btn-ghost btn-sm">Edit</button></div></td>
+            </tr>
+            <tr>
+              <td><span class="asset-tag-cell">PRN-FAC-01</span></td>
+              <td>Laser Printer</td><td>Printer</td><td>HP LaserJet M404</td><td>SN101</td><td>Faculty Room</td><td>—</td>
+              <td><span class="status-badge status-inactive">Inactive</span></td><td>Aug 2020</td>
+              <td><div class="table-actions"><button class="btn btn-ghost btn-sm" onclick="openModal('viewAssetModal')">View</button><button class="btn btn-ghost btn-sm">Edit</button></div></td>
+            </tr>
+            <tr>
+              <td><span class="asset-tag-cell">PRJ-R204-01</span></td>
+              <td>Projector</td><td>Projector</td><td>Epson EB-X41</td><td>SN201</td><td>Room 204</td><td>—</td>
+              <td><span class="status-badge status-maintenance">Maintenance</span></td><td>May 2021</td>
+              <td><div class="table-actions"><button class="btn btn-ghost btn-sm" onclick="openModal('viewAssetModal')">View</button><button class="btn btn-ghost btn-sm">Edit</button></div></td>
+            </tr>
+            <tr>
+              <td><span class="asset-tag-cell">AP-LIB-01</span></td>
+              <td>Access Point</td><td>Network</td><td>Cisco Aironet 1815</td><td>SN301</td><td>Library</td><td>—</td>
+              <td><span class="status-badge status-active">Active</span></td><td>Sep 2022</td>
+              <td><div class="table-actions"><button class="btn btn-ghost btn-sm" onclick="openModal('viewAssetModal')">View</button><button class="btn btn-ghost btn-sm">Edit</button></div></td>
+            </tr>
+            <tr>
+              <td><span class="asset-tag-cell">SRV-IT-01</span></td>
+              <td>File Server</td><td>Server</td><td>HP ProLiant DL20</td><td>SN401</td><td>Server Room</td><td>—</td>
+              <td><span class="status-badge status-active">Active</span></td><td>Nov 2021</td>
+              <td><div class="table-actions"><button class="btn btn-ghost btn-sm" onclick="openModal('viewAssetModal')">View</button><button class="btn btn-ghost btn-sm">Edit</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <span class="page-info">Page 1 of 32</span>
+        <div class="page-btns">
+          <button class="page-btn">‹</button><button class="page-btn active">1</button><button class="page-btn">2</button><button class="page-btn">3</button><button class="page-btn">›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ASSET MODAL -->
+<div class="modal-overlay" id="addAssetModal">
+  <div class="modal" style="max-width:580px">
+    <div class="modal__head"><span class="modal__title">Add New Asset</span><button class="modal__close" onclick="closeModal('addAssetModal')">✕</button></div>
+    <div class="modal__body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Asset Tag</label><input class="form-control" placeholder="e.g. PC-LAB1-21"/></div>
+        <div class="form-group"><label class="form-label">Asset Name</label><input class="form-control" placeholder="e.g. Desktop PC"/></div>
+        <div class="form-group"><label class="form-label">Category</label><select class="form-control"><option>Computer</option><option>Laptop</option><option>Printer</option><option>Projector</option><option>Network</option><option>Server</option><option>Peripheral</option></select></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-control"><option>Active</option><option>Inactive</option><option>Maintenance</option><option>Retired</option></select></div>
+        <div class="form-group"><label class="form-label">Brand</label><input class="form-control" placeholder="e.g. Dell"/></div>
+        <div class="form-group"><label class="form-label">Model</label><input class="form-control" placeholder="e.g. OptiPlex 3080"/></div>
+        <div class="form-group"><label class="form-label">Serial Number</label><input class="form-control" placeholder="Serial no."/></div>
+        <div class="form-group"><label class="form-label">Location</label><input class="form-control" placeholder="e.g. Computer Lab 1"/></div>
+        <div class="form-group"><label class="form-label">Purchase Date</label><input type="date" class="form-control"/></div>
+        <div class="form-group"><label class="form-label">Purchase Cost (₱)</label><input type="number" class="form-control" placeholder="0.00"/></div>
+        <div class="form-group"><label class="form-label">Warranty Expiry</label><input type="date" class="form-control"/></div>
+        <div class="form-group"><label class="form-label">Assigned To</label><select class="form-control"><option value="">Unassigned</option><option>Admin User</option><option>IT Staff</option></select></div>
+        <div class="form-group full"><label class="form-label">Specifications / Notes</label><textarea class="form-control" placeholder="RAM, CPU, storage specs…"></textarea></div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn btn-ghost" onclick="closeModal('addAssetModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="showToast('Asset added!');closeModal('addAssetModal')">Save Asset</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW ASSET MODAL -->
+<div class="modal-overlay" id="viewAssetModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal__head"><span class="modal__title">Asset: PC-LAB3-07</span><button class="modal__close" onclick="closeModal('viewAssetModal')">✕</button></div>
+    <div class="modal__body">
+      <div class="detail-meta" style="background:var(--bg3);border-radius:3px;margin-bottom:8px">
+        <div class="meta-item"><span class="meta-label">Status</span><span class="meta-value"><span class="status-badge status-maintenance">Maintenance</span></span></div>
+        <div class="meta-item"><span class="meta-label">Category</span><span class="meta-value">Computer</span></div>
+        <div class="meta-item"><span class="meta-label">Brand</span><span class="meta-value">Dell</span></div>
+        <div class="meta-item"><span class="meta-label">Model</span><span class="meta-value">OptiPlex 3080</span></div>
+        <div class="meta-item"><span class="meta-label">Serial No.</span><span class="meta-value">SN007</span></div>
+        <div class="meta-item"><span class="meta-label">Location</span><span class="meta-value">Computer Lab 3</span></div>
+        <div class="meta-item"><span class="meta-label">Purchase Date</span><span class="meta-value">Mar 2021</span></div>
+        <div class="meta-item"><span class="meta-label">Cost</span><span class="meta-value">₱28,000.00</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel__head"><span class="panel__title">Maintenance History</span></div>
+        <div style="padding:14px 18px">
+          <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+            <div style="flex:1">
+              <div style="font-size:.85rem;font-weight:600">Repair – Black screen on boot</div>
+              <div style="font-size:.75rem;color:var(--text-dim)">IT Staff · Mar 2, 2025</div>
+            </div>
+            <span class="status-badge status-in-progress">In Progress</span>
+          </div>
+        </div>
+        <div style="padding:10px 18px;border-top:1px solid var(--border)">
+          <button class="btn btn-primary btn-sm" onclick="openModal('maintModal');closeModal('viewAssetModal')">➕ Log Maintenance</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal__foot"><button class="btn btn-ghost" onclick="closeModal('viewAssetModal')">Close</button></div>
+  </div>
+</div>
+
+<!-- MAINTENANCE MODAL -->
+<div class="modal-overlay" id="maintModal">
+  <div class="modal">
+    <div class="modal__head"><span class="modal__title">Log Maintenance</span><button class="modal__close" onclick="closeModal('maintModal')">✕</button></div>
+    <div class="modal__body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Type</label><select class="form-control"><option>Repair</option><option>Preventive</option><option>Upgrade</option><option>Inspection</option></select></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-control"><option>Scheduled</option><option>In Progress</option><option>Completed</option></select></div>
+        <div class="form-group"><label class="form-label">Scheduled Date</label><input type="date" class="form-control"/></div>
+        <div class="form-group"><label class="form-label">Cost (₱)</label><input type="number" class="form-control" placeholder="0.00"/></div>
+        <div class="form-group full"><label class="form-label">Description</label><textarea class="form-control" placeholder="Describe the maintenance work…"></textarea></div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn btn-ghost" onclick="closeModal('maintModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="showToast('Maintenance logged!');closeModal('maintModal')">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function showToast(msg) {
+  const t = document.createElement('div'); t.className='toast'; t.textContent='✔  '+msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
+}
+function filterTable(val) {
+  val = val.toLowerCase();
+  document.querySelectorAll('#assetTable tbody tr').forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(val) ? '' : 'none';
+  });
+}
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
+});
+</script>
+</body>
+</html>

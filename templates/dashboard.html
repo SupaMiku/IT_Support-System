@@ -1,411 +1,246 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard – School IT Support System</title>
-  <link rel="stylesheet" href="/static/css/dashboard.css"/>
-</head>
-<body>
+﻿{% extends 'base.html' %}
 
-  <!-- ===== SIDEBAR ===== -->
-  <aside class="sidebar" id="sidebar">
-    <div class="sidebar__brand">
-      <span class="brand-gear">⚙</span>
-      <div class="brand-text">
-        <span class="brand-title">SCHOOL IT</span>
-        <span class="brand-sub">Support System</span>
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}"/>
+{% endblock %}
+
+{% block title %}Dashboard – School IT Support System{% endblock %}
+
+{% block page_heading %}Dashboard{% endblock %}
+{% block page_sub %}Overview of system status and recent activity{% endblock %}
+
+{% block content %}
+
+<!-- ===== STAT CARDS ===== -->
+<div class="stats-grid">
+  <div class="stat-card" style="--delay: 0.05s;">
+    <div class="stat-card__icon open">🎫</div>
+    <div class="stat-label">Open Tickets</div>
+    <div class="stat-val">{{ stats.open_tickets }}</div>
+    <div class="stat-card__trend neutral">of {{ stats.total_tickets }} total</div>
+  </div>
+
+  <div class="stat-card" style="--delay: 0.1s;">
+    <div class="stat-card__icon resolved">✔</div>
+    <div class="stat-label">Resolved</div>
+    <div class="stat-val">{{ stats.resolved_tickets }}</div>
+    <div class="stat-card__trend up">on track</div>
+  </div>
+
+  <div class="stat-card" style="--delay: 0.15s;">
+    <div class="stat-card__icon assets">🖥</div>
+    <div class="stat-label">Total Assets</div>
+    <div class="stat-val">{{ stats.assets }}</div>
+    <div class="stat-card__trend neutral">active & maintained</div>
+  </div>
+
+  <div class="stat-card" style="--delay: 0.2s;">
+    <div class="stat-card__icon critical">📢</div>
+    <div class="stat-label">Announcements</div>
+    <div class="stat-val">{{ stats.announcements }}</div>
+    <div class="stat-card__trend neutral">published</div>
+  </div>
+</div>
+
+<!-- ===== MID ROW: TICKETS + SYSTEM STATUS ===== -->
+<div class="mid-row">
+  <!-- LEFT: RECENT TICKETS -->
+  <div class="panel">
+    <div class="panel__head">
+      <span class="panel__title">Recent Tickets</span>
+      <a href="{{ url_for('tickets_page') }}" class="panel__link">View All →</a>
+    </div>
+    {% if stats.total_tickets > 0 %}
+      <div style="overflow-x: auto;">
+        <table class="ticket-table">
+          <thead>
+            <tr>
+              <th>Ticket ID</th>
+              <th>Priority</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="ticket-id">#T-001</td>
+              <td><span class="badge critical">Critical</span></td>
+              <td><span class="status in-progress">In Progress</span></td>
+            </tr>
+            <tr>
+              <td class="ticket-id">#T-002</td>
+              <td><span class="badge high">High</span></td>
+              <td><span class="status open">Open</span></td>
+            </tr>
+            <tr>
+              <td class="ticket-id">#T-003</td>
+              <td><span class="badge medium">Medium</span></td>
+              <td><span class="status open">Open</span></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+    {% else %}
+      <div style="padding: 40px 18px; text-align: center; color: rgba(255,255,255,0.3);">
+        <div style="font-size: 2rem; margin-bottom: 8px;">📭</div>
+        <div style="font-size: 0.88rem;">No tickets yet</div>
+        <div style="font-size: 0.75rem; margin-top: 4px; color: rgba(255,255,255,0.2);">Create your first support ticket to get started</div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- RIGHT: SYSTEM STATUS + QUICK ACTIONS -->
+  <div class="right-col">
+    <!-- System Status Panel -->
+    <div class="panel">
+      <div class="panel__head">
+        <span class="panel__title">System Status</span>
+        <span class="all-good">✔ All Good</span>
+      </div>
+      <ul class="status-list">
+        <li class="status-item">
+          <span class="status-name">Network</span>
+          <div class="status-bar-wrap"><div class="status-bar" style="--pct: 100%; --clr: #4caf82;"></div></div>
+          <span class="status-pct">100%</span>
+        </li>
+        <li class="status-item">
+          <span class="status-name">Servers</span>
+          <div class="status-bar-wrap"><div class="status-bar" style="--pct: 100%; --clr: #4caf82;"></div></div>
+          <span class="status-pct">100%</span>
+        </li>
+        <li class="status-item">
+          <span class="status-name">Storage</span>
+          <div class="status-bar-wrap"><div class="status-bar" style="--pct: 72%; --clr: #e0a840;"></div></div>
+          <span class="status-pct">72%</span>
+        </li>
+        <li class="status-item">
+          <span class="status-name">Uptime</span>
+          <div class="status-bar-wrap"><div class="status-bar" style="--pct: 99.8%; --clr: #4caf82;"></div></div>
+          <span class="status-pct">99.8%</span>
+        </li>
+      </ul>
     </div>
 
-    <nav class="sidebar__nav">
-      <p class="nav-section-label">MAIN</p>
-      <a href="#" class="nav-item active" data-page="dashboard">
-        <span class="nav-icon">▣</span> Dashboard
-      </a>
-      <a href="#" class="nav-item" data-page="tickets">
-        <span class="nav-icon">🎫</span> Tickets
-        <span class="nav-badge">12</span>
-      </a>
-      <a href="#" class="nav-item" data-page="assets">
-        <span class="nav-icon">🖥</span> Asset Inventory
-      </a>
-      <a href="#" class="nav-item" data-page="users">
-        <span class="nav-icon">👥</span> User Management
-      </a>
-
-      <p class="nav-section-label">SUPPORT</p>
-      <a href="#" class="nav-item" data-page="kb">
-        <span class="nav-icon">📚</span> Knowledge Base
-      </a>
-      <a href="#" class="nav-item" data-page="announce">
-        <span class="nav-icon">📢</span> Announcements
-        <span class="nav-badge new">3</span>
-      </a>
-      <a href="#" class="nav-item" data-page="reports">
-        <span class="nav-icon">📊</span> Reports
-      </a>
-
-      <p class="nav-section-label">SYSTEM</p>
-      <a href="#" class="nav-item" data-page="monitor">
-        <span class="nav-icon">📡</span> System Monitor
-      </a>
-      <a href="#" class="nav-item" data-page="settings">
-        <span class="nav-icon">⚙</span> Settings
-      </a>
-    </nav>
-
-    <div class="sidebar__footer">
-      <div class="user-info">
-        <div class="user-avatar">AD</div>
-        <div class="user-meta">
-          <span class="user-name">Admin User</span>
-          <span class="user-role">IT Administrator</span>
-        </div>
+    <!-- Quick Actions -->
+    <div class="panel">
+      <div class="panel__head">
+        <span class="panel__title">Quick Actions</span>
       </div>
-      <a href="login.html" class="logout-btn" title="Logout">⏻</a>
+      <div class="quick-actions">
+        <button class="quick-btn" onclick="alert('Create ticket feature coming soon')">➕ Create Ticket</button>
+        <button class="quick-btn" onclick="alert('Report feature coming soon')">📊 New Report</button>
+        <button class="quick-btn" onclick="alert('User management coming soon')">👤 Add User</button>
+        <button class="quick-btn" onclick="alert('Asset management coming soon')">📦 Add Asset</button>
+      </div>
     </div>
-  </aside>
+  </div>
+</div>
 
-  <!-- ===== MAIN CONTENT ===== -->
-  <div class="main">
-
-    <!-- Top Bar -->
-    <header class="topbar">
-      <button class="menu-toggle" id="menuToggle">☰</button>
-      <div class="topbar__left">
-        <h2 class="page-heading">Dashboard</h2>
-        <span class="page-date" id="liveDate"></span>
+<!-- ===== BOTTOM ROW: CHART + ACTIVITY + ASSETS ===== -->
+<div class="bottom-row">
+  <!-- Ticket Distribution Donut Chart -->
+  <div class="panel chart-panel">
+    <div class="panel__head" style="border-bottom: none; padding-bottom: 0;">
+      <span class="panel__title">Ticket Mix</span>
+    </div>
+    <div class="donut-wrap">
+      <svg class="donut" viewBox="0 0 100 100" width="140" height="140">
+        <circle class="donut-ring" cx="50" cy="50" r="45"></circle>
+        <circle class="donut-seg seg1" cx="50" cy="50" r="45" stroke-dasharray="60 100"></circle>
+        <circle class="donut-seg seg2" cx="50" cy="50" r="45" stroke-dasharray="25 100" style="transform: rotate(216deg); transform-origin: 50px 50px;"></circle>
+        <circle class="donut-seg seg3" cx="50" cy="50" r="45" stroke-dasharray="10 100" style="transform: rotate(306deg); transform-origin: 50px 50px;"></circle>
+        <circle class="donut-seg seg4" cx="50" cy="50" r="45" stroke-dasharray="5 100" style="transform: rotate(342deg); transform-origin: 50px 50px;"></circle>
+      </svg>
+      <div class="donut-center">
+        <span class="donut-total">{{ stats.total_tickets }}</span>
+        <span class="donut-sub">TOTAL</span>
       </div>
-      <div class="topbar__right">
-        <div class="search-box">
-          <span>🔍</span>
-          <input type="text" placeholder="Search tickets, assets..." />
+    </div>
+    <ul class="legend">
+      <li><span class="dot" style="background: #7ab3d4;"></span> Open <strong>{{ stats.open_tickets }}</strong></li>
+      <li><span class="dot" style="background: #4caf82;"></span> Resolved <strong>{{ stats.resolved_tickets }}</strong></li>
+      <li><span class="dot" style="background: #e0a840;"></span> In Progress <strong>0</strong></li>
+      <li><span class="dot" style="background: #e05555;"></span> Critical <strong>0</strong></li>
+    </ul>
+  </div>
+
+  <!-- Activity Feed -->
+  <div class="panel">
+    <div class="panel__head">
+      <span class="panel__title">Activity</span>
+      <a href="#" class="panel__link">View All →</a>
+    </div>
+    <ul class="activity-list">
+      <li class="activity-item">
+        <span class="act-dot resolved"></span>
+        <div class="act-body">
+          <p><strong>Ticket #T-005</strong> marked resolved by Admin User</p>
+          <time>Today, 2:15 PM</time>
         </div>
-        <button class="icon-btn notif-btn" title="Notifications">
-          🔔
-          <span class="notif-dot"></span>
-        </button>
-        <div class="topbar-avatar">AD</div>
-      </div>
-    </header>
-
-    <!-- ===== PAGE: DASHBOARD ===== -->
-    <div class="page-content" id="page-dashboard">
-
-      <!-- Stat Cards -->
-      <section class="stats-grid">
-        <div class="stat-card" style="--delay:0.05s">
-          <div class="stat-card__icon open">🎫</div>
-          <div class="stat-card__info">
-            <span class="stat-val" data-target="47">0</span>
-            <span class="stat-label">Open Tickets</span>
-          </div>
-          <div class="stat-card__trend up">▲ 8% this week</div>
+      </li>
+      <li class="activity-item">
+        <span class="act-dot open"></span>
+        <div class="act-body">
+          <p><strong>New ticket</strong> submitted: Projector Room 204</p>
+          <time>Today, 1:43 PM</time>
         </div>
-        <div class="stat-card" style="--delay:0.1s">
-          <div class="stat-card__icon resolved">✔</div>
-          <div class="stat-card__info">
-            <span class="stat-val" data-target="134">0</span>
-            <span class="stat-label">Resolved</span>
-          </div>
-          <div class="stat-card__trend up">▲ 12% this month</div>
+      </li>
+      <li class="activity-item">
+        <span class="act-dot asset"></span>
+        <div class="act-body">
+          <p><strong>Asset SRV-IT-01</strong> maintenance logged</p>
+          <time>Yesterday, 4:22 PM</time>
         </div>
-        <div class="stat-card" style="--delay:0.15s">
-          <div class="stat-card__icon assets">🖥</div>
-          <div class="stat-card__info">
-            <span class="stat-val" data-target="312">0</span>
-            <span class="stat-label">Total Assets</span>
-          </div>
-          <div class="stat-card__trend neutral">— No change</div>
+      </li>
+      <li class="activity-item">
+        <span class="act-dot announce"></span>
+        <div class="act-body">
+          <p><strong>Announcement</strong> published: Network Maintenance</p>
+          <time>Yesterday, 10:05 AM</time>
         </div>
-        <div class="stat-card" style="--delay:0.2s">
-          <div class="stat-card__icon critical">⚠</div>
-          <div class="stat-card__info">
-            <span class="stat-val" data-target="5">0</span>
-            <span class="stat-label">Critical Issues</span>
-          </div>
-          <div class="stat-card__trend down">▼ 2 since yesterday</div>
+      </li>
+      <li class="activity-item">
+        <span class="act-dot user"></span>
+        <div class="act-body">
+          <p><strong>New user</strong> added: juan@school.edu</p>
+          <time>Mar 1, 2026</time>
         </div>
-      </section>
+      </li>
+    </ul>
+  </div>
 
-      <!-- Middle Row -->
-      <div class="mid-row">
-
-        <!-- Recent Tickets -->
-        <section class="panel tickets-panel">
-          <div class="panel__head">
-            <h3 class="panel__title">Recent Tickets</h3>
-            <a href="#" class="panel__link">View All →</a>
-          </div>
-          <table class="ticket-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Subject</th>
-                <th>Requester</th>
-                <th>Priority</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="ticket-id">#1042</td>
-                <td>Projector not working – Room 204</td>
-                <td>Ms. Santos</td>
-                <td><span class="badge high">High</span></td>
-                <td><span class="status open">Open</span></td>
-              </tr>
-              <tr>
-                <td class="ticket-id">#1041</td>
-                <td>Cannot connect to school WiFi</td>
-                <td>Juan D.</td>
-                <td><span class="badge medium">Medium</span></td>
-                <td><span class="status in-progress">In Progress</span></td>
-              </tr>
-              <tr>
-                <td class="ticket-id">#1040</td>
-                <td>Printer offline – Faculty Room</td>
-                <td>Mr. Reyes</td>
-                <td><span class="badge high">High</span></td>
-                <td><span class="status open">Open</span></td>
-              </tr>
-              <tr>
-                <td class="ticket-id">#1039</td>
-                <td>Email account locked</td>
-                <td>Ana L.</td>
-                <td><span class="badge low">Low</span></td>
-                <td><span class="status resolved">Resolved</span></td>
-              </tr>
-              <tr>
-                <td class="ticket-id">#1038</td>
-                <td>PC won't boot – Lab 3</td>
-                <td>IT Staff</td>
-                <td><span class="badge critical">Critical</span></td>
-                <td><span class="status in-progress">In Progress</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
-
-        <!-- Right column -->
-        <div class="right-col">
-
-          <!-- System Status -->
-          <section class="panel status-panel">
-            <div class="panel__head">
-              <h3 class="panel__title">System Status</h3>
-              <span class="all-good">● All Systems</span>
-            </div>
-            <ul class="status-list">
-              <li class="status-item">
-                <span class="status-name">School Network</span>
-                <div class="status-bar-wrap"><div class="status-bar" style="--pct:92%; --clr:#4caf82"></div></div>
-                <span class="status-pct">92%</span>
-              </li>
-              <li class="status-item">
-                <span class="status-name">File Server</span>
-                <div class="status-bar-wrap"><div class="status-bar" style="--pct:78%; --clr:#e0a840"></div></div>
-                <span class="status-pct">78%</span>
-              </li>
-              <li class="status-item">
-                <span class="status-name">Email Server</span>
-                <div class="status-bar-wrap"><div class="status-bar" style="--pct:99%; --clr:#4caf82"></div></div>
-                <span class="status-pct">99%</span>
-              </li>
-              <li class="status-item">
-                <span class="status-name">CCTV System</span>
-                <div class="status-bar-wrap"><div class="status-bar" style="--pct:55%; --clr:#e05555"></div></div>
-                <span class="status-pct">55%</span>
-              </li>
-              <li class="status-item">
-                <span class="status-name">Backup System</span>
-                <div class="status-bar-wrap"><div class="status-bar" style="--pct:88%; --clr:#4caf82"></div></div>
-                <span class="status-pct">88%</span>
-              </li>
-            </ul>
-          </section>
-
-          <!-- Quick Actions -->
-          <section class="panel quick-panel">
-            <div class="panel__head">
-              <h3 class="panel__title">Quick Actions</h3>
-            </div>
-            <div class="quick-actions">
-              <button class="quick-btn">➕ New Ticket</button>
-              <button class="quick-btn">🖥 Add Asset</button>
-              <button class="quick-btn">👤 Add User</button>
-              <button class="quick-btn">📢 Announce</button>
-            </div>
-          </section>
-
+  <!-- Asset Overview -->
+  <div class="panel">
+    <div class="panel__head">
+      <span class="panel__title">Asset Status</span>
+      <a href="{{ url_for('assets_page') }}" class="panel__link">View All →</a>
+    </div>
+    <ul class="asset-list">
+      <li class="asset-row">
+        <span class="asset-icon">🖥</span>
+        <div class="asset-info">
+          <span class="asset-name">Active</span>
+          <div class="asset-bar-wrap"><div class="asset-bar" style="--w: 85%;"></div></div>
         </div>
-      </div>
+        <span class="asset-count">{{ stats.assets | int }}</span>
+      </li>
+      <li class="asset-row">
+        <span class="asset-icon">🔧</span>
+        <div class="asset-info">
+          <span class="asset-name">Maintenance</span>
+          <div class="asset-bar-wrap"><div class="asset-bar" style="--w: 42%; background: #e0a840;"></div></div>
+        </div>
+        <span class="asset-count">2</span>
+      </li>
+      <li class="asset-row">
+        <span class="asset-icon">⚠</span>
+        <div class="asset-info">
+          <span class="asset-name">Inactive</span>
+          <div class="asset-bar-wrap"><div class="asset-bar" style="--w: 18%; background: #e05555;"></div></div>
+        </div>
+        <span class="asset-count">1</span>
+      </li>
+    </ul>
+  </div>
+</div>
 
-      <!-- Bottom Row -->
-      <div class="bottom-row">
-
-        <!-- Ticket Category Breakdown -->
-        <section class="panel chart-panel">
-          <div class="panel__head">
-            <h3 class="panel__title">Ticket Categories</h3>
-          </div>
-          <div class="donut-wrap">
-            <svg class="donut" viewBox="0 0 120 120">
-              <circle class="donut-ring" cx="60" cy="60" r="48" />
-              <circle class="donut-seg seg1" cx="60" cy="60" r="48" stroke-dasharray="75 226" stroke-dashoffset="0" />
-              <circle class="donut-seg seg2" cx="60" cy="60" r="48" stroke-dasharray="56 226" stroke-dashoffset="-75" />
-              <circle class="donut-seg seg3" cx="60" cy="60" r="48" stroke-dasharray="45 226" stroke-dashoffset="-131" />
-              <circle class="donut-seg seg4" cx="60" cy="60" r="48" stroke-dasharray="50 226" stroke-dashoffset="-176" />
-            </svg>
-            <div class="donut-center">
-              <span class="donut-total">47</span>
-              <span class="donut-sub">Total</span>
-            </div>
-          </div>
-          <ul class="legend">
-            <li><span class="dot" style="background:#7ab3d4"></span> Hardware <strong>33%</strong></li>
-            <li><span class="dot" style="background:#4caf82"></span> Network <strong>25%</strong></li>
-            <li><span class="dot" style="background:#e0a840"></span> Software <strong>20%</strong></li>
-            <li><span class="dot" style="background:#e05555"></span> Account <strong>22%</strong></li>
-          </ul>
-        </section>
-
-        <!-- Recent Activity -->
-        <section class="panel activity-panel">
-          <div class="panel__head">
-            <h3 class="panel__title">Recent Activity</h3>
-          </div>
-          <ul class="activity-list">
-            <li class="activity-item">
-              <span class="act-dot resolved"></span>
-              <div class="act-body">
-                <p>Ticket <strong>#1039</strong> resolved by <strong>IT Staff</strong></p>
-                <time>2 minutes ago</time>
-              </div>
-            </li>
-            <li class="activity-item">
-              <span class="act-dot open"></span>
-              <div class="act-body">
-                <p>New ticket <strong>#1042</strong> submitted by <strong>Ms. Santos</strong></p>
-                <time>14 minutes ago</time>
-              </div>
-            </li>
-            <li class="activity-item">
-              <span class="act-dot asset"></span>
-              <div class="act-body">
-                <p>Asset <strong>PC-LAB3-07</strong> marked as under maintenance</p>
-                <time>1 hour ago</time>
-              </div>
-            </li>
-            <li class="activity-item">
-              <span class="act-dot announce"></span>
-              <div class="act-body">
-                <p>Announcement posted: <strong>Scheduled network maintenance</strong></p>
-                <time>3 hours ago</time>
-              </div>
-            </li>
-            <li class="activity-item">
-              <span class="act-dot user"></span>
-              <div class="act-body">
-                <p>New user <strong>student2025@school.edu</strong> registered</p>
-                <time>5 hours ago</time>
-              </div>
-            </li>
-            <li class="activity-item">
-              <span class="act-dot resolved"></span>
-              <div class="act-body">
-                <p>Ticket <strong>#1035</strong> closed – <strong>Verified by requester</strong></p>
-                <time>Yesterday</time>
-              </div>
-            </li>
-          </ul>
-        </section>
-
-        <!-- Asset Overview -->
-        <section class="panel asset-panel">
-          <div class="panel__head">
-            <h3 class="panel__title">Asset Overview</h3>
-          </div>
-          <ul class="asset-list">
-            <li class="asset-row">
-              <span class="asset-icon">🖥</span>
-              <div class="asset-info">
-                <span class="asset-name">Desktop PCs</span>
-                <div class="asset-bar-wrap"><div class="asset-bar" style="--w:72%"></div></div>
-              </div>
-              <span class="asset-count">180 / 250</span>
-            </li>
-            <li class="asset-row">
-              <span class="asset-icon">💻</span>
-              <div class="asset-info">
-                <span class="asset-name">Laptops</span>
-                <div class="asset-bar-wrap"><div class="asset-bar" style="--w:45%"></div></div>
-              </div>
-              <span class="asset-count">45 / 100</span>
-            </li>
-            <li class="asset-row">
-              <span class="asset-icon">🖨</span>
-              <div class="asset-info">
-                <span class="asset-name">Printers</span>
-                <div class="asset-bar-wrap"><div class="asset-bar" style="--w:83%"></div></div>
-              </div>
-              <span class="asset-count">25 / 30</span>
-            </li>
-            <li class="asset-row">
-              <span class="asset-icon">📡</span>
-              <div class="asset-info">
-                <span class="asset-name">Access Points</span>
-                <div class="asset-bar-wrap"><div class="asset-bar" style="--w:90%"></div></div>
-              </div>
-              <span class="asset-count">18 / 20</span>
-            </li>
-            <li class="asset-row">
-              <span class="asset-icon">📽</span>
-              <div class="asset-info">
-                <span class="asset-name">Projectors</span>
-                <div class="asset-bar-wrap"><div class="asset-bar" style="--w:60%"></div></div>
-              </div>
-              <span class="asset-count">24 / 40</span>
-            </li>
-          </ul>
-        </section>
-
-      </div>
-    </div><!-- /page-dashboard -->
-
-  </div><!-- /main -->
-
-  <script>
-    // Live date
-    const dateEl = document.getElementById('liveDate');
-    const now = new Date();
-    dateEl.textContent = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-
-    // Animated counters
-    document.querySelectorAll('.stat-val[data-target]').forEach(el => {
-      const target = +el.dataset.target;
-      let count = 0;
-      const step = Math.ceil(target / 40);
-      const interval = setInterval(() => {
-        count = Math.min(count + step, target);
-        el.textContent = count;
-        if (count >= target) clearInterval(interval);
-      }, 30);
-    });
-
-    // Sidebar toggle for mobile
-    document.getElementById('menuToggle').addEventListener('click', () => {
-      document.getElementById('sidebar').classList.toggle('open');
-    });
-
-    // Nav items active state
-    document.querySelectorAll('.nav-item').forEach(item => {
-      item.addEventListener('click', e => {
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
-      });
-    });
-  </script>
-</body>
-</html>
+{% endblock %}

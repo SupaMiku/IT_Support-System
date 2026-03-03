@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Users – School IT Support System</title>
+  <link rel="stylesheet" href="pages.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar__brand"><span class="brand-gear">⚙</span><div class="brand-text"><span class="brand-title">SCHOOL IT</span><span class="brand-sub">Support System</span></div></div>
+  <nav class="sidebar__nav">
+    <p class="nav-section-label">MAIN</p>
+    <a href="{{ url_for('dashboard') }}" class="nav-item"><span class="nav-icon">▣</span> Dashboard</a>
+    <a href="{{ url_for('tickets_page') }}"   class="nav-item"><span class="nav-icon">🎫</span> Tickets<span class="nav-badge">12</span></a>
+    <a href="{{ url_for('assets_page') }}"    class="nav-item"><span class="nav-icon">🖥</span> Asset Inventory</a>
+    <a href="{{ url_for('users_page') }}"     class="nav-item active"><span class="nav-icon">👥</span> User Management</a>
+    <p class="nav-section-label">SUPPORT</p>
+    <a href="kb.html"            class="nav-item"><span class="nav-icon">📚</span> Knowledge Base</a>
+    <a href="announcements.html" class="nav-item"><span class="nav-icon">📢</span> Announcements<span class="nav-badge new">3</span></a>
+    <a href="reports.html"       class="nav-item"><span class="nav-icon">📊</span> Reports</a>
+    <p class="nav-section-label">SYSTEM</p>
+    <a href="#" class="nav-item"><span class="nav-icon">⚙</span> Settings</a>
+  </nav>
+  <div class="sidebar__footer">
+    <div class="user-avatar">AD</div>
+    <div class="user-meta"><span class="user-name">Admin User</span><span class="user-role">IT Administrator</span></div>
+    <a href="index.html" class="logout-btn">⏻</a>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+    <div class="topbar__left"><h2 class="page-heading">User Management</h2><span class="page-sub">Manage student, faculty and staff accounts</span></div>
+    <div class="topbar__right">
+      <div class="search-box"><span>🔍</span><input type="text" placeholder="Search users…" oninput="filterCards(this.value)"/></div>
+      <button class="icon-btn">🔔<span class="notif-dot"></span></button>
+      <div class="topbar-avatar">AD</div>
+    </div>
+  </header>
+
+  <div class="page-content">
+
+    <div class="stats-row">
+      <div class="stat-mini" style="--d:.05s"><div class="stat-mini__icon" style="background:rgba(122,179,212,.12)">👥</div><div><div class="stat-mini__val">248</div><div class="stat-mini__label">Total Users</div></div></div>
+      <div class="stat-mini" style="--d:.1s"> <div class="stat-mini__icon" style="background:rgba(224,85,85,.12)">🛡</div><div><div class="stat-mini__val">3</div><div class="stat-mini__label">Admins</div></div></div>
+      <div class="stat-mini" style="--d:.15s"><div class="stat-mini__icon" style="background:rgba(176,127,212,.12)">🎓</div><div><div class="stat-mini__val">42</div><div class="stat-mini__label">Faculty</div></div></div>
+      <div class="stat-mini" style="--d:.2s"> <div class="stat-mini__icon" style="background:rgba(76,175,130,.12)">🧑‍🎓</div><div><div class="stat-mini__val">198</div><div class="stat-mini__label">Students</div></div></div>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <select class="filter-select" id="roleFilter" onchange="filterByRole()">
+          <option value="">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="it_staff">IT Staff</option>
+          <option value="faculty">Faculty</option>
+          <option value="student">Student</option>
+        </select>
+        <select class="filter-select">
+          <option value="">All Status</option>
+          <option>Active</option><option>Inactive</option>
+        </select>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-ghost">⬇ Export</button>
+        <button class="btn btn-primary" onclick="openModal('addUserModal')">➕ Add User</button>
+      </div>
+    </div>
+
+    <!-- User Cards Grid -->
+    <div class="user-grid" id="userGrid">
+
+      <div class="user-card" data-role="admin">
+        <div class="user-card__top">
+          <div class="user-card__avatar">AD</div>
+          <div><div class="user-card__name">Admin User</div><div class="user-card__email">admin@school.edu</div></div>
+        </div>
+        <div class="user-card__meta">
+          <span class="role-tag role-admin">Admin</span>
+          <span class="status-badge status-active" style="font-size:.65rem;padding:2px 7px">Active</span>
+        </div>
+        <div class="user-card__dept">📍 IT Department</div>
+        <div class="user-card__foot">
+          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openModal('viewUserModal')">View</button>
+          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openModal('editUserModal')">Edit</button>
+        </div>
+      </div>
+
+      <div class="user-card" data-role="it_staff">
+        <div class="user-card__top">
+          <div class="user-card__avatar">IS</div>
+          <div><div class="user-card__name">IT Staff Member</div><div class="user-card__email">staff@school.edu</div></div>
+        </div>
+        <div class="user-card__meta">
+          <span class="role-tag role-it_staff">IT Staff</span>
+          <span class="status-badge status-active" style="font-size:.65rem;padding:2px 7px">Active</span>
+        </div>
+        <div class="user-card__dept">📍 IT Department</div>
+        <div class="user-card__foot">
+          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openModal('viewUserModal')">View</button>
+          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openModal('editUserModal')">Edit</button>
+        </div>
+      </div>
+
+      <div class="user-card" data-role="faculty">
+        <div class="user-card__top">
+          <div class="user-card__avatar">MS</div>
+          <div><div class="user-card__name">Ms. Santos</div><div class="user-card__email">santos@school.edu</div></div>
+        </div>
+        <div class="user-card__meta">
+          <span class="role-tag role-faculty">Faculty</span>
+          <span class="status-badge status-active" style="font-size:.65rem;padding:2px 7px">Active</span>
+        </div>
+        <div class="user-card__dept">📍 Science Department</div>
+        <div class="user-card__foot">
+          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openModal('viewUserModal')">View</button>
+          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openModal('editUserModal')">Edit</button>
+        </div>
+      </div>
+
+      <div class="user-card" data-role="faculty">
+        <div class="user-card__top">
+          <div class="user-card__avatar">MR</div>
+          <div><div class="user-card__name">Mr. Reyes</div><div class="user-card__email">reyes@school.edu</div></div>
+        </div>
+        <div class="user-card__meta">
+          <span class="role-tag role-faculty">Faculty</span>
+          <span class="status-badge status-active" style="font-size:.65rem;padding:2px 7px">Active</span>
+        </div>
+        <div class="user-card__dept">📍 Math Department</div>
+        <div class="user-card__foot">
+          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openModal('viewUserModal')">View</button>
+          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openModal('editUserModal')">Edit</button>
+        </div>
+      </div>
+
+      <div class="user-card" data-role="student">
+        <div class="user-card__top">
+          <div class="user-card__avatar">JD</div>
+          <div><div class="user-card__name">Juan Dela Cruz</div><div class="user-card__email">juan@school.edu</div></div>
+        </div>
+        <div class="user-card__meta">
+          <span class="role-tag role-student">Student</span>
+          <span class="status-badge status-active" style="font-size:.65rem;padding:2px 7px">Active</span>
+        </div>
+        <div class="user-card__dept">📍 Grade 11 – STEM</div>
+        <div class="user-card__foot">
+          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openModal('viewUserModal')">View</button>
+          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openModal('editUserModal')">Edit</button>
+        </div>
+      </div>
+
+      <div class="user-card" data-role="student">
+        <div class="user-card__top">
+          <div class="user-card__avatar">AL</div>
+          <div><div class="user-card__name">Ana Lim</div><div class="user-card__email">ana@school.edu</div></div>
+        </div>
+        <div class="user-card__meta">
+          <span class="role-tag role-student">Student</span>
+          <span class="status-badge status-inactive" style="font-size:.65rem;padding:2px 7px">Inactive</span>
+        </div>
+        <div class="user-card__dept">📍 Grade 12 – ABM</div>
+        <div class="user-card__foot">
+          <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openModal('viewUserModal')">View</button>
+          <button class="btn btn-danger btn-sm" style="flex:1">Activate</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ADD USER MODAL -->
+<div class="modal-overlay" id="addUserModal">
+  <div class="modal">
+    <div class="modal__head"><span class="modal__title">Add New User</span><button class="modal__close" onclick="closeModal('addUserModal')">✕</button></div>
+    <div class="modal__body">
+      <div class="form-row">
+        <div class="form-group full"><label class="form-label">Full Name</label><input class="form-control" placeholder="Full name"/></div>
+        <div class="form-group"><label class="form-label">Username</label><input class="form-control" placeholder="username"/></div>
+        <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-control" placeholder="user@school.edu"/></div>
+        <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-control" placeholder="Temporary password"/></div>
+        <div class="form-group"><label class="form-label">Role</label><select class="form-control"><option>Student</option><option>Faculty</option><option>IT Staff</option><option>Admin</option></select></div>
+        <div class="form-group"><label class="form-label">Department</label><input class="form-control" placeholder="e.g. Grade 11 – STEM"/></div>
+        <div class="form-group full"><label class="form-label">Phone</label><input class="form-control" placeholder="+63 9xx xxx xxxx"/></div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn btn-ghost" onclick="closeModal('addUserModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="showToast('User created!');closeModal('addUserModal')">Create User</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW USER MODAL -->
+<div class="modal-overlay" id="viewUserModal">
+  <div class="modal">
+    <div class="modal__head"><span class="modal__title">User Profile – Admin User</span><button class="modal__close" onclick="closeModal('viewUserModal')">✕</button></div>
+    <div class="modal__body">
+      <div style="display:flex;align-items:center;gap:16px;padding:14px;background:var(--bg3);border-radius:3px;margin-bottom:8px">
+        <div class="user-card__avatar" style="width:54px;height:54px;font-size:1.3rem">AD</div>
+        <div>
+          <div style="font-size:1.1rem;font-weight:700">Admin User</div>
+          <div style="font-size:.8rem;color:var(--text-dim)">admin@school.edu · IT Department</div>
+          <div style="margin-top:5px"><span class="role-tag role-admin">Admin</span></div>
+        </div>
+      </div>
+      <div class="detail-meta" style="background:var(--bg3);border-radius:3px">
+        <div class="meta-item"><span class="meta-label">Username</span><span class="meta-value">admin</span></div>
+        <div class="meta-item"><span class="meta-label">Status</span><span class="meta-value"><span class="status-badge status-active">Active</span></span></div>
+        <div class="meta-item"><span class="meta-label">Last Login</span><span class="meta-value">Mar 2, 2025</span></div>
+        <div class="meta-item"><span class="meta-label">Member Since</span><span class="meta-value">Jan 2023</span></div>
+        <div class="meta-item"><span class="meta-label">Open Tickets</span><span class="meta-value">3</span></div>
+        <div class="meta-item"><span class="meta-label">Resolved</span><span class="meta-value">21</span></div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn btn-ghost" onclick="closeModal('viewUserModal')">Close</button>
+      <button class="btn btn-primary" onclick="openModal('editUserModal');closeModal('viewUserModal')">Edit User</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT USER MODAL -->
+<div class="modal-overlay" id="editUserModal">
+  <div class="modal">
+    <div class="modal__head"><span class="modal__title">Edit User</span><button class="modal__close" onclick="closeModal('editUserModal')">✕</button></div>
+    <div class="modal__body">
+      <div class="form-row">
+        <div class="form-group full"><label class="form-label">Full Name</label><input class="form-control" value="Admin User"/></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-control" value="admin@school.edu"/></div>
+        <div class="form-group"><label class="form-label">Department</label><input class="form-control" value="IT Department"/></div>
+        <div class="form-group"><label class="form-label">Role</label><select class="form-control"><option selected>Admin</option><option>IT Staff</option><option>Faculty</option><option>Student</option></select></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-control"><option>Active</option><option>Inactive</option></select></div>
+        <div class="form-group full"><label class="form-label">New Password (leave blank to keep)</label><input type="password" class="form-control" placeholder="New password…"/></div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn btn-danger" onclick="showToast('User deactivated','error');closeModal('editUserModal')">Deactivate</button>
+      <button class="btn btn-ghost" onclick="closeModal('editUserModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="showToast('User updated!');closeModal('editUserModal')">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function showToast(msg, type='') {
+  const t=document.createElement('div'); t.className='toast '+type; t.textContent='✔  '+msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
+}
+function filterCards(val) {
+  val = val.toLowerCase();
+  document.querySelectorAll('.user-card').forEach(c => {
+    c.style.display = c.textContent.toLowerCase().includes(val) ? '' : 'none';
+  });
+}
+function filterByRole() {
+  const role = document.getElementById('roleFilter').value;
+  document.querySelectorAll('.user-card').forEach(c => {
+    c.style.display = (!role || c.dataset.role === role) ? '' : 'none';
+  });
+}
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
+});
+</script>
+</body>
+</html>

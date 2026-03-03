@@ -55,6 +55,20 @@ def delete_user(user_id):
     db.session.commit()
     return jsonify({'message': 'User deactivated'}), 200
 
+@users_bp.route('/staff', methods=['GET'])
+def list_staff():
+    """Get all IT staff members for assignment purposes"""
+    staff_role = Role.query.filter_by(name='it_staff').first()
+    admin_role = Role.query.filter_by(name='admin').first()
+    
+    staff = User.query.filter(
+        User.is_active == True,
+        ((User.role_id == staff_role.id if staff_role else False) or 
+         (User.role_id == admin_role.id if admin_role else False))
+    ).order_by(User.full_name).all()
+    
+    return jsonify([{'id': u.id, 'full_name': u.full_name} for u in staff]), 200
+
 @users_bp.route('/roles', methods=['GET'])
 def list_roles():
     return jsonify([r.to_dict() for r in Role.query.all()]), 200

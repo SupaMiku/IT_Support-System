@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Announcements – School IT Support System</title>
+  <link rel="stylesheet" href="pages.css"/>
+  <link href="/static/css/pages.css" rel="stylesheet"/>
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar__brand"><span class="brand-gear">⚙</span><div class="brand-text"><span class="brand-title">SCHOOL IT</span><span class="brand-sub">Support System</span></div></div>
+  <nav class="sidebar__nav">
+    <p class="nav-section-label">MAIN</p>
+    <a href="{{ url_for('dashboard') }}" class="nav-item"><span class="nav-icon">▣</span> Dashboard</a>
+    <a href="{{ url_for('tickets_page') }}"   class="nav-item"><span class="nav-icon">🎫</span> Tickets<span class="nav-badge">12</span></a>
+    <a href="assets.html"    class="nav-item"><span class="nav-icon">🖥</span> Asset Inventory</a>
+    <a href="users.html"     class="nav-item"><span class="nav-icon">👥</span> User Management</a>
+    <p class="nav-section-label">SUPPORT</p>
+    <a href="kb.html"            class="nav-item"><span class="nav-icon">📚</span> Knowledge Base</a>
+    <a href="announcements.html" class="nav-item active"><span class="nav-icon">📢</span> Announcements<span class="nav-badge new">3</span></a>
+    <a href="reports.html"       class="nav-item"><span class="nav-icon">📊</span> Reports</a>
+    <p class="nav-section-label">SYSTEM</p>
+    <a href="#" class="nav-item"><span class="nav-icon">⚙</span> Settings</a>
+  </nav>
+  <div class="sidebar__footer">
+    <div class="user-avatar">AD</div>
+    <div class="user-meta"><span class="user-name">Admin User</span><span class="user-role">IT Administrator</span></div>
+    <a href="index.html" class="logout-btn">⏻</a>
+  </div>
+</aside>
+
+<div class="main">
+  <header class="topbar">
+    <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+    <div class="topbar__left"><h2 class="page-heading">Announcements</h2><span class="page-sub">IT news, maintenance schedules and system alerts</span></div>
+    <div class="topbar__right">
+      <div class="search-box"><span>🔍</span><input type="text" placeholder="Search…" oninput="filterAnnounce(this.value)"/></div>
+      <button class="icon-btn">🔔<span class="notif-dot"></span></button>
+      <div class="topbar-avatar">AD</div>
+    </div>
+  </header>
+
+  <div class="page-content">
+
+    <div class="stats-row">
+      <div class="stat-mini" style="--d:.05s"><div class="stat-mini__icon" style="background:rgba(122,179,212,.12)">📢</div><div><div class="stat-mini__val">12</div><div class="stat-mini__label">Total</div></div></div>
+      <div class="stat-mini" style="--d:.1s"> <div class="stat-mini__icon" style="background:rgba(76,175,130,.12)">✔</div><div><div class="stat-mini__val">9</div><div class="stat-mini__label">Active</div></div></div>
+      <div class="stat-mini" style="--d:.15s"><div class="stat-mini__icon" style="background:rgba(224,85,85,.12)">🚨</div><div><div class="stat-mini__val">2</div><div class="stat-mini__label">High Priority</div></div></div>
+      <div class="stat-mini" style="--d:.2s"> <div class="stat-mini__icon" style="background:rgba(224,168,64,.12)">⏰</div><div><div class="stat-mini__val">3</div><div class="stat-mini__label">Expiring Soon</div></div></div>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <select class="filter-select" id="prioFilter" onchange="filterByPriority()">
+          <option value="">All Priorities</option>
+          <option value="high">High</option>
+          <option value="normal">Normal</option>
+          <option value="urgent">Urgent</option>
+        </select>
+        <select class="filter-select">
+          <option>Published</option><option>Drafts</option><option>Expired</option>
+        </select>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-primary" onclick="openModal('newAnnModal')">📢 New Announcement</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel__head"><span class="panel__title">All Announcements</span></div>
+      <div class="announce-list" id="announceList">
+
+        <div class="announce-item" data-priority="high">
+          <div class="announce-priority-bar bar-high"></div>
+          <div class="announce-body">
+            <div class="announce-title">Scheduled Network Maintenance – March 5</div>
+            <div class="announce-content">The school network will undergo maintenance on March 5, 2025 from 8PM to 11PM. Internet access, WiFi, and the school portal will be unavailable during this period. Please save all work beforehand.</div>
+            <div class="announce-meta">📅 Posted Mar 2, 2025 · by Admin User · <span style="color:var(--danger)">⚠ High Priority</span> · Expires Mar 6</div>
+          </div>
+          <div class="announce-actions">
+            <button class="btn btn-ghost btn-sm" onclick="openModal('editAnnModal')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="showToast('Announcement deleted','error')">Delete</button>
+          </div>
+        </div>
+
+        <div class="announce-item" data-priority="high">
+          <div class="announce-priority-bar bar-high"></div>
+          <div class="announce-body">
+            <div class="announce-title">Email System Upgrade – March 8</div>
+            <div class="announce-content">The school email system (Google Workspace) will be upgraded on March 8 from 6AM to 8AM. Email services may be temporarily unavailable. No action required from users.</div>
+            <div class="announce-meta">📅 Posted Mar 1, 2025 · by Admin User · <span style="color:var(--danger)">⚠ High Priority</span></div>
+          </div>
+          <div class="announce-actions">
+            <button class="btn btn-ghost btn-sm" onclick="openModal('editAnnModal')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="showToast('Announcement deleted','error')">Delete</button>
+          </div>
+        </div>
+
+        <div class="announce-item" data-priority="normal">
+          <div class="announce-priority-bar bar-normal"></div>
+          <div class="announce-body">
+            <div class="announce-title">New IT Helpdesk Hours Starting March 10</div>
+            <div class="announce-content">Starting March 10, the IT helpdesk will be available from 7AM to 6PM Monday to Friday. Walk-in support is available at the IT Office (Room 101).</div>
+            <div class="announce-meta">📅 Posted Feb 28, 2025 · by Admin User · Normal Priority</div>
+          </div>
+          <div class="announce-actions">
+            <button class="btn btn-ghost btn-sm" onclick="openModal('editAnnModal')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="showToast('Announcement deleted','error')">Delete</button>
+          </div>
+        </div>
+
+        <div class="announce-item" data-priority="normal">
+          <div class="announce-priority-bar bar-normal"></div>
+          <div class="announce-body">
+            <div class="announce-title">Software Update – All Lab Computers</div>
+            <div class="announce-content">All laboratory computers will be updated to Windows 11 during the summer break. Please save all personal files to your network drive or USB before June 1. Files stored locally will not be retained.</div>
+            <div class="announce-meta">📅 Posted Feb 25, 2025 · by IT Staff · Normal Priority</div>
+          </div>
+          <div class="announce-actions">
+            <button class="btn btn-ghost btn-sm" onclick="openModal('editAnnModal')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="showToast('Announcement deleted','error')">Delete</button>
+          </div>
+        </div>
+
+        <div class="announce-item" data-priority="normal">
+          <div class="announce-priority-bar bar-normal"></div>
+          <div class="announce-body">
+            <div class="announce-title">New WiFi Access Points Installed in Building C</div>
+            <div class="announce-content">New Cisco access points have been installed throughout Building C including classrooms 301–320. WiFi coverage should now be significantly improved in this area.</div>
+            <div class="announce-meta">📅 Posted Feb 20, 2025 · by IT Staff · Normal Priority</div>
+          </div>
+          <div class="announce-actions">
+            <button class="btn btn-ghost btn-sm" onclick="openModal('editAnnModal')">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="showToast('Announcement deleted','error')">Delete</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEW ANNOUNCEMENT MODAL -->
+<div class="modal-overlay" id="newAnnModal">
+  <div class="modal">
+    <div class="modal__head"><span class="modal__title">New Announcement</span><button class="modal__close" onclick="closeModal('newAnnModal')">✕</button></div>
+    <div class="modal__body">
+      <div class="form-row">
+        <div class="form-group full"><label class="form-label">Title</label><input class="form-control" placeholder="Announcement title…"/></div>
+        <div class="form-group"><label class="form-label">Priority</label><select class="form-control"><option>Normal</option><option>High</option><option>Urgent</option></select></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-control"><option>Published</option><option>Draft</option></select></div>
+        <div class="form-group full"><label class="form-label">Content</label><textarea class="form-control" style="min-height:120px" placeholder="Write announcement details…"></textarea></div>
+        <div class="form-group full"><label class="form-label">Expires On (optional)</label><input type="date" class="form-control"/></div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn btn-ghost" onclick="closeModal('newAnnModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="showToast('Announcement posted!');closeModal('newAnnModal')">Post Now</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT ANNOUNCEMENT MODAL -->
+<div class="modal-overlay" id="editAnnModal">
+  <div class="modal">
+    <div class="modal__head"><span class="modal__title">Edit Announcement</span><button class="modal__close" onclick="closeModal('editAnnModal')">✕</button></div>
+    <div class="modal__body">
+      <div class="form-row">
+        <div class="form-group full"><label class="form-label">Title</label><input class="form-control" value="Scheduled Network Maintenance – March 5"/></div>
+        <div class="form-group"><label class="form-label">Priority</label><select class="form-control"><option>Normal</option><option selected>High</option><option>Urgent</option></select></div>
+        <div class="form-group"><label class="form-label">Status</label><select class="form-control"><option selected>Published</option><option>Draft</option></select></div>
+        <div class="form-group full"><label class="form-label">Content</label><textarea class="form-control" style="min-height:120px">The school network will undergo maintenance on March 5, 2025 from 8PM to 11PM.</textarea></div>
+        <div class="form-group full"><label class="form-label">Expires On</label><input type="date" class="form-control" value="2025-03-06"/></div>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn btn-ghost" onclick="closeModal('editAnnModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="showToast('Announcement updated!');closeModal('editAnnModal')">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function showToast(msg, type='') {
+  const t=document.createElement('div'); t.className='toast '+type; t.textContent='✔  '+msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
+}
+function filterAnnounce(val) {
+  val = val.toLowerCase();
+  document.querySelectorAll('.announce-item').forEach(i => {
+    i.style.display = i.textContent.toLowerCase().includes(val) ? '' : 'none';
+  });
+}
+function filterByPriority() {
+  const p = document.getElementById('prioFilter').value;
+  document.querySelectorAll('.announce-item').forEach(i => {
+    i.style.display = (!p || i.dataset.priority === p) ? '' : 'none';
+  });
+}
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
+});
+</script>
+</body>
+</html>

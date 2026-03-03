@@ -62,16 +62,154 @@ def create_app():
     @app.route('/dashboard')
     def dashboard():
         """Dashboard page"""
-        # Check if user is logged in
         if 'user_id' not in session:
             return redirect(url_for('login'))
-        return render_template('dashboard.html')
+        from models import Ticket, Asset, Announcement, User
+        stats = {
+            'total_tickets': Ticket.query.count(),
+            'open_tickets': Ticket.query.filter_by(status='open').count(),
+            'resolved_tickets': Ticket.query.filter_by(status='resolved').count(),
+            'users': User.query.count(),
+            'assets': Asset.query.count(),
+            'announcements': Announcement.query.filter_by(is_published=True).count()
+        }
+        return render_template('dashboard.html', stats=stats)
+
+    # simple page routes for other UI sections
+    @app.route('/tickets')
+    def tickets_page():
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        from models import Ticket
+        ticket_stats = {
+            'open': Ticket.query.filter_by(status='open').count(),
+            'in_progress': Ticket.query.filter_by(status='in_progress').count(),
+            'resolved': Ticket.query.filter_by(status='resolved').count(),
+            'critical': Ticket.query.filter_by(priority='critical').count(),
+        }
+        # render the original template (legacy static design)
+        return render_template('tickets.html', ticket_stats=ticket_stats)
+
+    @app.route('/assets')
+    def assets_page():
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        from models import Asset
+        assets_stats = {
+            'total': Asset.query.count(),
+            'active': Asset.query.filter_by(status='active').count(),
+            'maintenance': Asset.query.filter_by(status='maintenance').count(),
+            'inactive': Asset.query.filter_by(status='inactive').count()
+        }
+        return render_template('assets.html', assets_stats=assets_stats)
+
+    @app.route('/users')
+    def users_page():
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        from models import User
+        role_counts = {
+            'admins': User.query.join(User.role).filter_by(name='admin').count(),
+            'faculty': User.query.join(User.role).filter_by(name='faculty').count(),
+            'students': User.query.join(User.role).filter_by(name='student').count(),
+            'it_staff': User.query.join(User.role).filter_by(name='it_staff').count(),
+            'total': User.query.count()
+        }
+        return render_template('users.html', role_counts=role_counts)
+
+    @app.route('/kb')
+    def kb_page():
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        from models import KnowledgeBaseArticle
+        kb_stats = {
+            'total': KnowledgeBaseArticle.query.count(),
+            'published': KnowledgeBaseArticle.query.filter_by(is_published=True).count(),
+            'drafts': KnowledgeBaseArticle.query.filter_by(is_published=False).count(),
+            'views': db.session.query(db.func.sum(KnowledgeBaseArticle.views)).scalar() or 0
+        }
+        return render_template('kb.html', kb_stats=kb_stats)
+
+    @app.route('/announcements')
+    def announcements_page():
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        from models import Announcement
+        ann_stats = {
+            'total': Announcement.query.count(),
+            'active': Announcement.query.filter_by(is_published=True).count(),
+            'high': Announcement.query.filter_by(priority='high').count(),
+            'expiring': Announcement.query.filter(Announcement.expires_at != None).count()
+        }
+        return render_template('announcements.html', ann_stats=ann_stats)
+
+    @app.route('/reports')
+    def reports_page():
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        # compute some sample KPI numbers based on real data
+        from models import Ticket
+        total = Ticket.query.count()
+        resolved = Ticket.query.filter_by(status='resolved').count()
+        resolution_rate = (resolved/total*100) if total else 0
+        return render_template('reports.html', resolution_rate=resolution_rate)
+
+    @app.route('/profile')
+    def profile_page():
+        """Simple user profile view"""
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        from models import User
+        user = User.query.get(session['user_id'])
+        if not user:
+            return redirect(url_for('login'))
+        return render_template('profile.html', user=user)
 
     @app.route('/logout')
-    def logout():
-        """Logout user"""
-        session.clear()
+    def logout_page():
+        """Convenience route for logging out via GET (used by UI).
+        The API itself expects POST at /api/auth/logout, but the sidebar
+        uses a simple anchor tag so we provide this helper.
+        """
+        session.pop('user_id', None)
+        # note: the audit log entry will be created by the API if the client
+        # performs a POST, this route just clears the session and redirects
         return redirect(url_for('login'))
+
+    @app.context_processor
+    def inject_user():
+        from models import User
+        uid = session.get('user_id')
+        user = User.query.get(uid) if uid else None
+        return {'current_user': user}
+
+    @app.context_processor
+    def inject_counts():
+        """Provide badge/count numbers to every template."""
+        from models import Ticket, Announcement, User, Asset
+        # wrap in try/except because database may not be initialized yet
+        try:
+            ticket_count = Ticket.query.count()
+        except Exception:
+            ticket_count = 0
+        try:
+            announcement_count = Announcement.query.filter_by(is_published=True).count()
+        except Exception:
+            announcement_count = 0
+        try:
+            user_count = User.query.count()
+        except Exception:
+            user_count = 0
+        try:
+            asset_count = Asset.query.count()
+        except Exception:
+            asset_count = 0
+        return {
+            'ticket_count': ticket_count,
+            'announcement_count': announcement_count,
+            'user_count': user_count,
+            'asset_count': asset_count
+        }
 
     # ── Create tables & seed data on first run ─────────────────────
     with app.app_context():
@@ -88,7 +226,7 @@ def seed_data():
         return  # already seeded
 
     from werkzeug.security import generate_password_hash
-    from datetime import datetime, date
+    from datetime import datetime, date, timezone
 
     # Roles
     admin_role   = Role(name='admin',   description='Full system access')
@@ -190,7 +328,7 @@ def seed_data():
         requester_id=student.id,
         assigned_to_id=admin.id,
         location='N/A',
-        resolved_at=datetime.utcnow()
+        resolved_at=datetime.now(timezone.utc)
     )
     db.session.add_all([t1, t2, t3, t4, t5])
     db.session.flush()

@@ -26,15 +26,38 @@ def create_asset():
     data = request.get_json()
     if not data.get('asset_tag') or not data.get('name'):
         return jsonify({'error': 'asset_tag and name are required'}), 400
+    
+    # Handle date fields safely
+    purchase_date = None
+    if data.get('purchase_date') and data['purchase_date'].strip():
+        try:
+            purchase_date = date.fromisoformat(data['purchase_date'])
+        except:
+            pass
+    
+    warranty_expiry = None
+    if data.get('warranty_expiry') and data['warranty_expiry'].strip():
+        try:
+            warranty_expiry = date.fromisoformat(data['warranty_expiry'])
+        except:
+            pass
+    
+    # Handle purchase_cost as float
+    purchase_cost = None
+    try:
+        purchase_cost = float(data.get('purchase_cost')) if data.get('purchase_cost') else None
+    except:
+        pass
+    
     asset = Asset(
         asset_tag=data['asset_tag'], name=data['name'],
         category=data.get('category','other'), brand=data.get('brand'),
         model=data.get('model'), serial_number=data.get('serial_number'),
         specifications=data.get('specifications'), status=data.get('status','active'),
         location=data.get('location'), assigned_to_id=data.get('assigned_to_id'),
-        purchase_date=date.fromisoformat(data['purchase_date']) if data.get('purchase_date') else None,
-        purchase_cost=data.get('purchase_cost'),
-        warranty_expiry=date.fromisoformat(data['warranty_expiry']) if data.get('warranty_expiry') else None,
+        purchase_date=purchase_date,
+        purchase_cost=purchase_cost,
+        warranty_expiry=warranty_expiry,
         notes=data.get('notes')
     )
     db.session.add(asset)
@@ -57,12 +80,37 @@ def update_asset(asset_id):
         return jsonify({'error': 'Insufficient permissions'}), 403
     asset = Asset.query.get_or_404(asset_id)
     data  = request.get_json()
+    
+    # Update string fields
     for f in ['name','category','brand','model','serial_number','specifications',
-              'status','location','assigned_to_id','purchase_cost','notes']:
+              'status','location','notes']:
         if f in data:
             setattr(asset, f, data[f])
-    if data.get('purchase_date'):   asset.purchase_date   = date.fromisoformat(data['purchase_date'])
-    if data.get('warranty_expiry'): asset.warranty_expiry = date.fromisoformat(data['warranty_expiry'])
+    
+    # Handle assigned_to_id as integer
+    if 'assigned_to_id' in data:
+        asset.assigned_to_id = int(data['assigned_to_id']) if data['assigned_to_id'] else None
+    
+    # Handle purchase_cost as float
+    if 'purchase_cost' in data:
+        try:
+            asset.purchase_cost = float(data['purchase_cost']) if data['purchase_cost'] else None
+        except:
+            pass
+    
+    # Handle date fields safely
+    if data.get('purchase_date') and data['purchase_date'].strip():
+        try:
+            asset.purchase_date = date.fromisoformat(data['purchase_date'])
+        except:
+            pass
+    
+    if data.get('warranty_expiry') and data['warranty_expiry'].strip():
+        try:
+            asset.warranty_expiry = date.fromisoformat(data['warranty_expiry'])
+        except:
+            pass
+    
     db.session.commit()
     return jsonify(asset.to_dict()), 200
 
@@ -83,12 +131,35 @@ def add_maintenance(asset_id):
         return jsonify({'error': 'Insufficient permissions'}), 403
     asset = Asset.query.get_or_404(asset_id)
     data  = request.get_json()
+    
+    # Handle date fields safely
+    scheduled_date = None
+    if data.get('scheduled_date') and data['scheduled_date'].strip():
+        try:
+            scheduled_date = date.fromisoformat(data['scheduled_date'])
+        except:
+            pass
+    
+    completed_date = None
+    if data.get('completed_date') and data['completed_date'].strip():
+        try:
+            completed_date = date.fromisoformat(data['completed_date'])
+        except:
+            pass
+    
+    # Handle cost as float
+    cost = 0
+    try:
+        cost = float(data.get('cost', 0)) if data.get('cost') else 0
+    except:
+        pass
+    
     m = AssetMaintenance(
         asset_id=asset_id, performed_by_id=user.id,
         maintenance_type=data.get('maintenance_type','repair'),
-        description=data.get('description'), cost=data.get('cost',0),
-        scheduled_date=date.fromisoformat(data['scheduled_date']) if data.get('scheduled_date') else None,
-        completed_date=date.fromisoformat(data['completed_date']) if data.get('completed_date') else None,
+        description=data.get('description'), cost=cost,
+        scheduled_date=scheduled_date,
+        completed_date=completed_date,
         status=data.get('status','scheduled')
     )
     if m.status == 'in_progress' and asset.status == 'active':

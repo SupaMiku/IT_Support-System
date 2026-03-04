@@ -7,227 +7,481 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/assets.css') }}"/>
+<style>
+  .assets-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .stat-card { background: var(--bg2); padding: 16px; border-radius: 6px; text-align: center; }
+  .stat-card__val { font-size: 24px; font-weight: 700; color: var(--primary); }
+  .stat-card__label { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+  .assets-controls { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .assets-controls input, .assets-controls select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px; }
+  .assets-table { width: 100%; border-collapse: collapse; background: var(--bg2); border-radius: 6px; overflow: hidden; }
+  .assets-table thead { background: var(--bg3); }
+  .assets-table th { padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--text-dim); border-bottom: 1px solid var(--border); }
+  .assets-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .assets-table tbody tr:hover { background: var(--bg3); }
+  .status-badge { display: inline-block; padding: 4px 8px; border-radius: 3px; font-size: 11px; font-weight: 600; }
+  .status-active { background: rgba(76, 175, 130, 0.2); color: #4caf86; }
+  .status-inactive { background: rgba(224, 85, 85, 0.2); color: #e05555; }
+  .status-maintenance { background: rgba(224, 168, 64, 0.2); color: #e0a840; }
+  .action-btn { padding: 4px 8px; margin: 0 2px; border: none; border-radius: 3px; cursor: pointer; font-size: 11px; }
+  .action-btn-edit { background: var(--primary); color: white; }
+  .action-btn-delete { background: #e05555; color: white; }
+  .action-btn:hover { opacity: 0.8; }
+  .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+  .modal-overlay.open { display: flex !important; }
+  .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 6px; max-width: 500px; width: 100%; max-height: 80vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+  .modal-header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
+  .modal-body { padding: 16px; }
+  .modal-footer { padding: 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+  .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px; }
+  .form-group { display: flex; flex-direction: column; }
+  .form-label { font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--text); }
+  .form-control { padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px; background: var(--bg1); color: var(--text); }
+  .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn:hover { opacity: 0.9; }
+  .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-dim); }
+</style>
 {% endblock %}
 
 {% block content %}
-  <div class="sidebar__brand"><span class="brand-gear">⚙</span><div class="brand-text"><span class="brand-title">SCHOOL IT</span><span class="brand-sub">Support System</span></div></div>
-  <nav class="sidebar__nav">
-    <p class="nav-section-label">MAIN</p>
-    <a href="{{ url_for('dashboard') }}" class="nav-item"><span class="nav-icon">▣</span> Dashboard</a>
-    <a href="{{ url_for('tickets_page') }}"   class="nav-item"><span class="nav-icon">🎫</span> Tickets<span class="nav-badge">12</span></a>
-    <a href="{{ url_for('assets_page') }}"    class="nav-item active"><span class="nav-icon">🖥</span> Asset Inventory</a>
-    <a href="{{ url_for('users_page') }}"     class="nav-item"><span class="nav-icon">👥</span> User Management</a>
-    <p class="nav-section-label">SUPPORT</p>
-    <a href="kb.html"            class="nav-item"><span class="nav-icon">📚</span> Knowledge Base</a>
-    <a href="announcements.html" class="nav-item"><span class="nav-icon">📢</span> Announcements<span class="nav-badge new">3</span></a>
-    <a href="reports.html"       class="nav-item"><span class="nav-icon">📊</span> Reports</a>
-    <p class="nav-section-label">SYSTEM</p>
-    <a href="#" class="nav-item"><span class="nav-icon">⚙</span> Settings</a>
-  </nav>
-  <div class="sidebar__footer">
-    <div class="user-avatar">AD</div>
-    <div class="user-meta"><span class="user-name">Admin User</span><span class="user-role">IT Administrator</span></div>
-    <a href="index.html" class="logout-btn">⏻</a>
+<div class="assets-stats">
+  <div class="stat-card">
+    <div class="stat-card__val" id="stat-total">0</div>
+    <div class="stat-card__label">Total Assets</div>
   </div>
-</aside>
-
-<div class="main">
-  <header class="topbar">
-    <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-    <div class="topbar__left"><h2 class="page-heading">Asset Inventory</h2><span class="page-sub">Manage all school hardware and devices</span></div>
-    <div class="topbar__right">
-      <div class="search-box"><span>🔍</span><input type="text" placeholder="Search assets…" oninput="filterTable(this.value)"/></div>
-      <button class="icon-btn">🔔<span class="notif-dot"></span></button>
-      <div class="topbar-avatar">AD</div>
-    </div>
-  </header>
-
-  <div class="page-content">
-
-    <div class="stats-row">
-      <div class="stat-mini" style="--d:.05s"><div class="stat-mini__icon" style="background:rgba(76,175,130,.12)">🖥</div><div><div class="stat-mini__val">312</div><div class="stat-mini__label">Total Assets</div></div></div>
-      <div class="stat-mini" style="--d:.1s"> <div class="stat-mini__icon" style="background:rgba(122,179,212,.12)">✔</div><div><div class="stat-mini__val">278</div><div class="stat-mini__label">Active</div></div></div>
-      <div class="stat-mini" style="--d:.15s"><div class="stat-mini__icon" style="background:rgba(224,168,64,.12)">🔧</div><div><div class="stat-mini__val">18</div><div class="stat-mini__label">Maintenance</div></div></div>
-      <div class="stat-mini" style="--d:.2s"> <div class="stat-mini__icon" style="background:rgba(224,85,85,.12)">⚠</div><div><div class="stat-mini__val">16</div><div class="stat-mini__label">Inactive</div></div></div>
-    </div>
-
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <select class="filter-select"><option value="">All Categories</option><option>Computer</option><option>Laptop</option><option>Printer</option><option>Projector</option><option>Network</option><option>Server</option></select>
-        <select class="filter-select"><option value="">All Status</option><option>Active</option><option>Inactive</option><option>Maintenance</option><option>Retired</option></select>
-        <input class="filter-input" placeholder="Filter by location…"/>
-      </div>
-      <div class="toolbar-right">
-        <button class="btn btn-ghost">⬇ Export</button>
-        <button class="btn btn-primary" onclick="openModal('addAssetModal')">➕ Add Asset</button>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel__head">
-        <span class="panel__title">All Assets</span>
-        <span style="font-size:.78rem;color:var(--text-dim)">312 total</span>
-      </div>
-      <div style="overflow-x:auto">
-        <table class="data-table" id="assetTable">
-          <thead>
-            <tr><th>Asset Tag</th><th>Name</th><th>Category</th><th>Brand / Model</th><th>Serial No.</th><th>Location</th><th>Assigned To</th><th>Status</th><th>Purchase Date</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><span class="asset-tag-cell">PC-LAB1-01</span></td>
-              <td>Desktop PC</td><td>Computer</td><td>Acer Aspire TC</td><td>SN001</td><td>Computer Lab 1</td><td>—</td>
-              <td><span class="status-badge status-active">Active</span></td><td>Jun 2022</td>
-              <td><div class="table-actions"><button class="btn btn-ghost btn-sm" onclick="openModal('viewAssetModal')">View</button><button class="btn btn-ghost btn-sm">Edit</button></div></td>
-            </tr>
-            <tr>
-              <td><span class="asset-tag-cell">PC-LAB3-07</span></td>
-              <td>Desktop PC</td><td>Computer</td><td>Dell OptiPlex 3080</td><td>SN007</td><td>Computer Lab 3</td><td>—</td>
-              <td><span class="status-badge status-maintenance">Maintenance</span></td><td>Mar 2021</td>
-              <td><div class="table-actions"><button class="btn btn-ghost btn-sm" onclick="openModal('viewAssetModal')">View</button><button class="btn btn-ghost btn-sm">Edit</button></div></td>
-            </tr>
-            <tr>
-              <td><span class="asset-tag-cell">LPT-ADMIN-01</span></td>
-              <td>Laptop</td><td>Laptop</td><td>Lenovo ThinkPad E14</td><td>SN050</td><td>Admin Office</td><td>Admin User</td>
-              <td><span class="status-badge status-active">Active</span></td><td>Jan 2023</td>
-              <td><div class="table-actions"><button class="btn btn-ghost btn-sm" onclick="openModal('viewAssetModal')">View</button><button class="btn btn-ghost btn-sm">Edit</button></div></td>
-            </tr>
-            <tr>
-              <td><span class="asset-tag-cell">PRN-FAC-01</span></td>
-              <td>Laser Printer</td><td>Printer</td><td>HP LaserJet M404</td><td>SN101</td><td>Faculty Room</td><td>—</td>
-              <td><span class="status-badge status-inactive">Inactive</span></td><td>Aug 2020</td>
-              <td><div class="table-actions"><button class="btn btn-ghost btn-sm" onclick="openModal('viewAssetModal')">View</button><button class="btn btn-ghost btn-sm">Edit</button></div></td>
-            </tr>
-            <tr>
-              <td><span class="asset-tag-cell">PRJ-R204-01</span></td>
-              <td>Projector</td><td>Projector</td><td>Epson EB-X41</td><td>SN201</td><td>Room 204</td><td>—</td>
-              <td><span class="status-badge status-maintenance">Maintenance</span></td><td>May 2021</td>
-              <td><div class="table-actions"><button class="btn btn-ghost btn-sm" onclick="openModal('viewAssetModal')">View</button><button class="btn btn-ghost btn-sm">Edit</button></div></td>
-            </tr>
-            <tr>
-              <td><span class="asset-tag-cell">AP-LIB-01</span></td>
-              <td>Access Point</td><td>Network</td><td>Cisco Aironet 1815</td><td>SN301</td><td>Library</td><td>—</td>
-              <td><span class="status-badge status-active">Active</span></td><td>Sep 2022</td>
-              <td><div class="table-actions"><button class="btn btn-ghost btn-sm" onclick="openModal('viewAssetModal')">View</button><button class="btn btn-ghost btn-sm">Edit</button></div></td>
-            </tr>
-            <tr>
-              <td><span class="asset-tag-cell">SRV-IT-01</span></td>
-              <td>File Server</td><td>Server</td><td>HP ProLiant DL20</td><td>SN401</td><td>Server Room</td><td>—</td>
-              <td><span class="status-badge status-active">Active</span></td><td>Nov 2021</td>
-              <td><div class="table-actions"><button class="btn btn-ghost btn-sm" onclick="openModal('viewAssetModal')">View</button><button class="btn btn-ghost btn-sm">Edit</button></div></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="pagination">
-        <span class="page-info">Page 1 of 32</span>
-        <div class="page-btns">
-          <button class="page-btn">‹</button><button class="page-btn active">1</button><button class="page-btn">2</button><button class="page-btn">3</button><button class="page-btn">›</button>
-        </div>
-      </div>
-    </div>
+  <div class="stat-card">
+    <div class="stat-card__val" id="stat-active">0</div>
+    <div class="stat-card__label">Active</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__val" id="stat-maintenance">0</div>
+    <div class="stat-card__label">Maintenance</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card__val" id="stat-inactive">0</div>
+    <div class="stat-card__label">Inactive</div>
   </div>
 </div>
 
-<!-- ADD ASSET MODAL -->
+<div class="assets-controls">
+  <input type="text" id="search-input" placeholder="Search by tag, name, or location…" style="flex: 1; min-width: 200px;"/>
+  <select id="filter-status">
+    <option value="">All Status</option>
+    <option value="active">Active</option>
+    <option value="inactive">Inactive</option>
+    <option value="maintenance">Maintenance</option>
+  </select>
+  <select id="filter-category">
+    <option value="">All Categories</option>
+    <option value="computer">Computer</option>
+    <option value="laptop">Laptop</option>
+    <option value="printer">Printer</option>
+    <option value="projector">Projector</option>
+    <option value="network">Network</option>
+    <option value="server">Server</option>
+  </select>
+  <button class="btn btn-primary" onclick="openModal('addAssetModal')">➕ Add Asset</button>
+</div>
+
+<div style="overflow-x: auto; background: var(--bg2); border-radius: 6px;">
+  <table class="assets-table">
+    <thead>
+      <tr>
+        <th>Asset Tag</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Location</th>
+        <th>Status</th>
+        <th>Purchase Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="assets-tbody">
+      <tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--text-dim);">Loading assets…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ADD/EDIT ASSET MODAL -->
 <div class="modal-overlay" id="addAssetModal">
-  <div class="modal" style="max-width:580px">
-    <div class="modal__head"><span class="modal__title">Add New Asset</span><button class="modal__close" onclick="closeModal('addAssetModal')">✕</button></div>
-    <div class="modal__body">
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Asset Tag</label><input class="form-control" placeholder="e.g. PC-LAB1-21"/></div>
-        <div class="form-group"><label class="form-label">Asset Name</label><input class="form-control" placeholder="e.g. Desktop PC"/></div>
-        <div class="form-group"><label class="form-label">Category</label><select class="form-control"><option>Computer</option><option>Laptop</option><option>Printer</option><option>Projector</option><option>Network</option><option>Server</option><option>Peripheral</option></select></div>
-        <div class="form-group"><label class="form-label">Status</label><select class="form-control"><option>Active</option><option>Inactive</option><option>Maintenance</option><option>Retired</option></select></div>
-        <div class="form-group"><label class="form-label">Brand</label><input class="form-control" placeholder="e.g. Dell"/></div>
-        <div class="form-group"><label class="form-label">Model</label><input class="form-control" placeholder="e.g. OptiPlex 3080"/></div>
-        <div class="form-group"><label class="form-label">Serial Number</label><input class="form-control" placeholder="Serial no."/></div>
-        <div class="form-group"><label class="form-label">Location</label><input class="form-control" placeholder="e.g. Computer Lab 1"/></div>
-        <div class="form-group"><label class="form-label">Purchase Date</label><input type="date" class="form-control"/></div>
-        <div class="form-group"><label class="form-label">Purchase Cost (₱)</label><input type="number" class="form-control" placeholder="0.00"/></div>
-        <div class="form-group"><label class="form-label">Warranty Expiry</label><input type="date" class="form-control"/></div>
-        <div class="form-group"><label class="form-label">Assigned To</label><select class="form-control"><option value="">Unassigned</option><option>Admin User</option><option>IT Staff</option></select></div>
-        <div class="form-group full"><label class="form-label">Specifications / Notes</label><textarea class="form-control" placeholder="RAM, CPU, storage specs…"></textarea></div>
-      </div>
+  <div class="modal">
+    <div class="modal-header">
+      <span id="modal-title">Add New Asset</span>
+      <button class="close-btn" onclick="closeModal('addAssetModal')">✕</button>
     </div>
-    <div class="modal__foot">
-      <button class="btn btn-ghost" onclick="closeModal('addAssetModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="showToast('Asset added!');closeModal('addAssetModal')">Save Asset</button>
-    </div>
-  </div>
-</div>
-
-<!-- VIEW ASSET MODAL -->
-<div class="modal-overlay" id="viewAssetModal">
-  <div class="modal" style="max-width:560px">
-    <div class="modal__head"><span class="modal__title">Asset: PC-LAB3-07</span><button class="modal__close" onclick="closeModal('viewAssetModal')">✕</button></div>
-    <div class="modal__body">
-      <div class="detail-meta" style="background:var(--bg3);border-radius:3px;margin-bottom:8px">
-        <div class="meta-item"><span class="meta-label">Status</span><span class="meta-value"><span class="status-badge status-maintenance">Maintenance</span></span></div>
-        <div class="meta-item"><span class="meta-label">Category</span><span class="meta-value">Computer</span></div>
-        <div class="meta-item"><span class="meta-label">Brand</span><span class="meta-value">Dell</span></div>
-        <div class="meta-item"><span class="meta-label">Model</span><span class="meta-value">OptiPlex 3080</span></div>
-        <div class="meta-item"><span class="meta-label">Serial No.</span><span class="meta-value">SN007</span></div>
-        <div class="meta-item"><span class="meta-label">Location</span><span class="meta-value">Computer Lab 3</span></div>
-        <div class="meta-item"><span class="meta-label">Purchase Date</span><span class="meta-value">Mar 2021</span></div>
-        <div class="meta-item"><span class="meta-label">Cost</span><span class="meta-value">₱28,000.00</span></div>
-      </div>
-      <div class="panel">
-        <div class="panel__head"><span class="panel__title">Maintenance History</span></div>
-        <div style="padding:14px 18px">
-          <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
-            <div style="flex:1">
-              <div style="font-size:.85rem;font-weight:600">Repair – Black screen on boot</div>
-              <div style="font-size:.75rem;color:var(--text-dim)">IT Staff · Mar 2, 2025</div>
-            </div>
-            <span class="status-badge status-in-progress">In Progress</span>
+    <div class="modal-body">
+      <form id="assetForm" novalidate>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Asset Tag *</label>
+            <input type="text" name="asset_tag" class="form-control"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Asset Name *</label>
+            <input type="text" name="name" class="form-control"/>
           </div>
         </div>
-        <div style="padding:10px 18px;border-top:1px solid var(--border)">
-          <button class="btn btn-primary btn-sm" onclick="openModal('maintModal');closeModal('viewAssetModal')">➕ Log Maintenance</button>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select name="category" class="form-control">
+              <option value="other">Other</option>
+              <option value="computer">Computer</option>
+              <option value="laptop">Laptop</option>
+              <option value="printer">Printer</option>
+              <option value="projector">Projector</option>
+              <option value="network">Network</option>
+              <option value="server">Server</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-control">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="maintenance">Maintenance</option>
+            </select>
+          </div>
         </div>
-      </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Brand</label>
+            <input type="text" name="brand" class="form-control"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Model</label>
+            <input type="text" name="model" class="form-control"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Serial Number</label>
+            <input type="text" name="serial_number" class="form-control"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <input type="text" name="location" class="form-control"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Purchase Date</label>
+            <input type="date" name="purchase_date" class="form-control"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Purchase Cost (₱)</label>
+            <input type="number" name="purchase_cost" class="form-control" step="0.01"/>
+          </div>
+        </div>
+        <div class="form-group full" style="grid-column: 1 / -1;">
+          <label class="form-label">Notes</label>
+          <textarea name="notes" class="form-control" rows="3"></textarea>
+        </div>
+      </form>
     </div>
-    <div class="modal__foot"><button class="btn btn-ghost" onclick="closeModal('viewAssetModal')">Close</button></div>
-  </div>
-</div>
-
-<!-- MAINTENANCE MODAL -->
-<div class="modal-overlay" id="maintModal">
-  <div class="modal">
-    <div class="modal__head"><span class="modal__title">Log Maintenance</span><button class="modal__close" onclick="closeModal('maintModal')">✕</button></div>
-    <div class="modal__body">
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Type</label><select class="form-control"><option>Repair</option><option>Preventive</option><option>Upgrade</option><option>Inspection</option></select></div>
-        <div class="form-group"><label class="form-label">Status</label><select class="form-control"><option>Scheduled</option><option>In Progress</option><option>Completed</option></select></div>
-        <div class="form-group"><label class="form-label">Scheduled Date</label><input type="date" class="form-control"/></div>
-        <div class="form-group"><label class="form-label">Cost (₱)</label><input type="number" class="form-control" placeholder="0.00"/></div>
-        <div class="form-group full"><label class="form-label">Description</label><textarea class="form-control" placeholder="Describe the maintenance work…"></textarea></div>
-      </div>
-    </div>
-    <div class="modal__foot">
-      <button class="btn btn-ghost" onclick="closeModal('maintModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="showToast('Maintenance logged!');closeModal('maintModal')">Save</button>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('addAssetModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitAssetForm()">Save Asset</button>
     </div>
   </div>
 </div>
 
 <script>
-function openModal(id)  { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function showToast(msg) {
-  const t = document.createElement('div'); t.className='toast'; t.textContent='✔  '+msg;
-  document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
+let allAssets = [];
+let editingAssetId = null;
+
+async function loadAssets() {
+  try {
+    const res = await fetch('/api/assets/', { credentials: 'include' });
+    if (!res.ok) throw new Error('Failed to fetch assets');
+    allAssets = await res.json();
+    renderAssets(allAssets);
+    updateStats();
+  } catch (err) {
+    console.error(err);
+    document.getElementById('assets-tbody').innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Error loading assets</td></tr>';
+  }
 }
-function filterTable(val) {
-  val = val.toLowerCase();
-  document.querySelectorAll('#assetTable tbody tr').forEach(r => {
-    r.style.display = r.textContent.toLowerCase().includes(val) ? '' : 'none';
+
+function updateStats() {
+  const total = allAssets.length;
+  const active = allAssets.filter(a => a.status === 'active').length;
+  const maintenance = allAssets.filter(a => a.status === 'maintenance').length;
+  const inactive = allAssets.filter(a => a.status === 'inactive').length;
+  
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-active').textContent = active;
+  document.getElementById('stat-maintenance').textContent = maintenance;
+  document.getElementById('stat-inactive').textContent = inactive;
+}
+
+function renderAssets(assets) {
+  const tbody = document.getElementById('assets-tbody');
+  if (assets.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 24px; color: var(--text-dim);">No assets found</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = assets.map(a => `
+    <tr>
+      <td><strong>${escapeHtml(a.asset_tag)}</strong></td>
+      <td>${escapeHtml(a.name)}</td>
+      <td>${escapeHtml(a.category || 'N/A')}</td>
+      <td>${escapeHtml(a.location || 'N/A')}</td>
+      <td><span class="status-badge status-${a.status}">${a.status}</span></td>
+      <td>${a.purchase_date ? new Date(a.purchase_date).toLocaleDateString() : 'N/A'}</td>
+      <td>
+        <button class="action-btn action-btn-edit" onclick="editAsset(${a.id})">Edit</button>
+        <button class="action-btn action-btn-delete" onclick="deleteAsset(${a.id})">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text || '';
+  return div.innerHTML;
+}
+
+function filterAssets() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const status = document.getElementById('filter-status').value;
+  const category = document.getElementById('filter-category').value;
+  
+  const filtered = allAssets.filter(a => {
+    const matchSearch = !search || 
+      a.asset_tag.toLowerCase().includes(search) ||
+      a.name.toLowerCase().includes(search) ||
+      (a.location && a.location.toLowerCase().includes(search));
+    const matchStatus = !status || a.status === status;
+    const matchCategory = !category || a.category === category;
+    return matchSearch && matchStatus && matchCategory;
   });
+  
+  renderAssets(filtered);
 }
-document.querySelectorAll('.modal-overlay').forEach(o => {
-  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
-});
+
+function openModal(id) {
+  console.log('Opening modal:', id);
+  const modal = document.getElementById(id);
+  if (!modal) {
+    console.error('Modal not found:', id);
+    return;
+  }
+  modal.classList.add('open');
+  console.log('Modal opened, classes:', modal.className);
+}
+
+function closeModal(id) {
+  console.log('Closing modal:', id);
+  document.getElementById(id).classList.remove('open');
+}
+
+function resetForm() {
+  console.log('Resetting form');
+  document.getElementById('assetForm').reset();
+  editingAssetId = null;
+  document.getElementById('modal-title').textContent = 'Add New Asset';
+}
+
+async function editAsset(id) {
+  console.log('Editing asset:', id);
+  const asset = allAssets.find(a => a.id === id);
+  if (!asset) {
+    console.error('Asset not found:', id);
+    alert('Asset not found');
+    return;
+  }
+  
+  editingAssetId = id;
+  document.getElementById('modal-title').textContent = 'Edit Asset';
+  
+  const form = document.getElementById('assetForm');
+  form.asset_tag.value = asset.asset_tag;
+  form.name.value = asset.name;
+  form.category.value = asset.category || 'other';
+  form.status.value = asset.status;
+  form.brand.value = asset.brand || '';
+  form.model.value = asset.model || '';
+  form.serial_number.value = asset.serial_number || '';
+  form.location.value = asset.location || '';
+  form.purchase_date.value = asset.purchase_date || '';
+  form.purchase_cost.value = asset.purchase_cost || '';
+  form.notes.value = asset.notes || '';
+  
+  console.log('Form populated with asset data');
+  openModal('addAssetModal');
+}
+
+async function submitAssetForm() {
+  console.log('=== submitAssetForm CALLED ===');
+  
+  try {
+    const form = document.getElementById('assetForm');
+    if (!form) {
+      console.error('Form not found!');
+      alert('Form element not found');
+      return;
+    }
+
+    // Get values directly
+    const asset_tag = form.querySelector('[name="asset_tag"]').value.trim();
+    const name = form.querySelector('[name="name"]').value.trim();
+    const category = form.querySelector('[name="category"]').value || 'other';
+    const status = form.querySelector('[name="status"]').value || 'active';
+    const brand = form.querySelector('[name="brand"]').value || '';
+    const model = form.querySelector('[name="model"]').value || '';
+    const serial_number = form.querySelector('[name="serial_number"]').value || '';
+    const location = form.querySelector('[name="location"]').value || '';
+    const purchase_date = form.querySelector('[name="purchase_date"]').value || '';
+    const purchase_cost = form.querySelector('[name="purchase_cost"]').value || '';
+    const notes = form.querySelector('[name="notes"]').value || '';
+    
+    console.log('Extracted values:', { asset_tag, name, category, status });
+    
+    // Validate required fields
+    if (!asset_tag || !name) {
+      const msg = 'Asset Tag and Name are required';
+      console.warn(msg);
+      alert(msg);
+      return;
+    }
+    
+    const data = { asset_tag, name, category, status, brand, model, serial_number, location, purchase_date, purchase_cost, notes };
+    const url = editingAssetId ? `/api/assets/${editingAssetId}` : '/api/assets/';
+    const method = editingAssetId ? 'PUT' : 'POST';
+    
+    console.log('Making API call:', { url, method, data });
+    
+    const response = await fetch(url, {
+      method,
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    console.log('API Response status:', response.status);
+    const responseText = await response.text();
+    console.log('API Response body:', responseText);
+    
+    if (!response.ok) {
+      try {
+        const error = JSON.parse(responseText);
+        console.error('Error from API:', error);
+        
+        if (response.status === 403) {
+          alert('🔒 Permission Denied!\n\nYou need admin or IT staff role to manage assets.\n\nPlease login as:\nEmail: admin@school.edu\nPassword: Admin@1234');
+        } else {
+          alert('❌ Error: ' + (error.error || 'Failed to save asset'));
+        }
+      } catch (e) {
+        alert('❌ Error: ' + response.statusText + ' - ' + responseText);
+      }
+      return;
+    }
+    
+    console.log('Asset saved successfully!');
+    alert(editingAssetId ? 'Asset updated!' : 'Asset created!');
+    closeModal('addAssetModal');
+    resetForm();
+    await loadAssets();
+    
+  } catch (err) {
+    console.error('Exception in submitAssetForm:', err);
+    alert('Exception: ' + err.message);
+  }
+}
+
+async function deleteAsset(id) {
+  if (!confirm('Delete this asset? This action cannot be undone.')) return;
+  
+  try {
+    console.log('Deleting asset:', id);
+    const res = await fetch(`/api/assets/${id}`, { 
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    
+    console.log('Delete response status:', res.status);
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('Delete error response:', errorText);
+      
+      if (res.status === 403) {
+        alert('🔒 Permission Denied!\n\nOnly admins can delete assets.\n\nPlease login as admin@school.edu');
+      } else {
+        alert('Failed to delete asset: ' + errorText);
+      }
+      return;
+    }
+    
+    console.log('Asset deleted successfully');
+    await loadAssets();
+    showToast('Asset deleted');
+  } catch (err) {
+    console.error(err);
+    alert('Error deleting asset: ' + err.message);
+  }
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; padding: 12px 16px; border-radius: 4px; z-index: 2000;';
+  t.textContent = '✔ ' + msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// Event listeners for filters
+console.log('Initializing assets page...');
+
+// Check current user first
+async function checkCurrentUser() {
+  try {
+    const res = await fetch('/api/auth/me', { credentials: 'include' });
+    if (res.ok) {
+      const user = await res.json();
+      console.log('Current user:', user);
+      if (user.role !== 'admin' && user.role !== 'it_staff') {
+        console.warn('WARNING: Current user role is:', user.role);
+        console.warn('You need admin or it_staff role to create/edit/delete assets');
+        alert(`Your role is "${user.role}". You need "admin" or "it_staff" role to manage assets.\nLogin as admin@school.edu with password Admin@1234`);
+      }
+    } else {
+      console.warn('Not logged in or /api/auth/me endpoint missing');
+    }
+  } catch (err) {
+    console.error('Could not check user:', err);
+  }
+}
+
+checkCurrentUser();
+
+const searchInput = document.getElementById('search-input');
+const filterStatus = document.getElementById('filter-status');
+const filterCategory = document.getElementById('filter-category');
+const addAssetModal = document.getElementById('addAssetModal');
+
+if (searchInput) searchInput.addEventListener('input', filterAssets);
+if (filterStatus) filterStatus.addEventListener('change', filterAssets);
+if (filterCategory) filterCategory.addEventListener('change', filterAssets);
+
+// Close modal on overlay click
+if (addAssetModal) {
+  addAssetModal.addEventListener('click', e => {
+    if (e.target.id === 'addAssetModal') closeModal('addAssetModal');
+  });
+  console.log('Modal overlay listener added');
+}
+
+console.log('Page initialization complete');
+
+// Load assets on page load
+console.log('Calling loadAssets...');
+loadAssets();
 </script>
-</body>
-</html>
+{% endblock %}

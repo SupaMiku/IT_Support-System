@@ -15,11 +15,48 @@ def list_users():
     user = current_user()
     if not user or user.role.name not in ('admin', 'it_staff'):
         return jsonify({'error': 'Insufficient permissions'}), 403
-    q = User.query
+    q = User.query.filter(User.is_active == True)  # Only show active users by default
     if request.args.get('role'):       q = q.join(Role).filter(Role.name == request.args['role'])
     if request.args.get('department'): q = q.filter(User.department.ilike(f"%{request.args['department']}%"))
     if request.args.get('is_active'):  q = q.filter(User.is_active == (request.args['is_active'].lower() == 'true'))
     return jsonify([u.to_dict() for u in q.order_by(User.full_name).all()]), 200
+
+@users_bp.route('/', methods=['POST'])
+def create_user():
+    user = current_user()
+    if not user or user.role.name != 'admin':
+        return jsonify({'error': 'Admin only'}), 403
+    data = request.get_json()
+    
+    if not data.get('full_name') or not data.get('email') or not data.get('password'):
+        return jsonify({'error': 'Missing required fields'}), 400
+    
+    existing = User.query.filter_by(email=data['email']).first()
+    if existing:
+        return jsonify({'error': 'Email already exists'}), 409
+    
+    role = Role.query.filter_by(name=data.get('role', 'student')).first()
+    if not role:
+        return jsonify({'error': 'Invalid role'}), 400
+    
+    # Auto-generate username from email
+    username = data['email'].split('@')[0]
+    if User.query.filter_by(username=username).first():
+        username = f"{username}_{User.query.count() + 1}"
+    
+    new_user = User(
+        username=username,
+        full_name=data['full_name'],
+        email=data['email'],
+        password_hash=generate_password_hash(data['password']),
+        role_id=role.id,
+        department=data.get('department', ''),
+        phone=data.get('phone', ''),
+        is_active=True
+    )
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify(new_user.to_dict()), 201
 
 @users_bp.route('/<int:user_id>', methods=['GET'])
 def get_user(user_id):

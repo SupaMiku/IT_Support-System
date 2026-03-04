@@ -50,8 +50,15 @@ def register():
             counter += 1
         username = f"{username}{counter}"
 
-    # Default role is student
-    role = Role.query.filter_by(name=data.get('role', 'student')).first()
+    # Get role from request, default to student
+    role_name = data.get('role', 'student')
+    print(f"[REGISTER DEBUG] Received role: {role_name}")
+    
+    role = Role.query.filter_by(name=role_name).first()
+    print(f"[REGISTER DEBUG] Role lookup result: {role}")
+    if role:
+        print(f"[REGISTER DEBUG] Found role: {role.name} (id={role.id})")
+    
     if not role:
         return jsonify({'error': 'Invalid role'}), 400
 
@@ -64,11 +71,14 @@ def register():
         department=data.get('department'),
         phone=data.get('phone'),
     )
+    print(f"[REGISTER DEBUG] Creating user: {username} with role_id={role.id} (role={role.name})")
     db.session.add(user)
     db.session.flush()
+    print(f"[REGISTER DEBUG] User created with id={user.id}")
     log_action(user.id, 'auth.register')
     db.session.commit()
 
+    print(f"[REGISTER DEBUG] Registration complete. User role_id={user.role_id}")
     return jsonify({'message': 'Account created successfully', 'user': user.to_dict()}), 201
 
 
@@ -84,6 +94,7 @@ def login():
     if not user.is_active:
         return jsonify({'error': 'Account is deactivated'}), 403
 
+    print(f"[LOGIN DEBUG] User login: {user.email}, role_id={user.role_id}, role={user.role.name}")
     user.last_login = datetime.utcnow()
     session['user_id'] = user.id
     log_action(user.id, 'auth.login')

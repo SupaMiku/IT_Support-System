@@ -1,213 +1,353 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Knowledge Base – School IT Support System</title>
-  <link rel="stylesheet" href="pages.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-</head>
-<body>
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar__brand"><span class="brand-gear">⚙</span><div class="brand-text"><span class="brand-title">SCHOOL IT</span><span class="brand-sub">Support System</span></div></div>
-  <nav class="sidebar__nav">
-    <p class="nav-section-label">MAIN</p>
-    <a href="{{ url_for('dashboard') }}" class="nav-item"><span class="nav-icon">▣</span> Dashboard</a>
-    <a href="{{ url_for('tickets_page') }}"   class="nav-item"><span class="nav-icon">🎫</span> Tickets<span class="nav-badge">12</span></a>
-    <a href="{{ url_for('assets_page') }}"    class="nav-item"><span class="nav-icon">🖥</span> Asset Inventory</a>
-    <a href="{{ url_for('users_page') }}"     class="nav-item"><span class="nav-icon">👥</span> User Management</a>
-    <p class="nav-section-label">SUPPORT</p>
-    <a href="kb.html"            class="nav-item active"><span class="nav-icon">📚</span> Knowledge Base</a>
-    <a href="announcements.html" class="nav-item"><span class="nav-icon">📢</span> Announcements<span class="nav-badge new">3</span></a>
-    <a href="reports.html"       class="nav-item"><span class="nav-icon">📊</span> Reports</a>
-    <p class="nav-section-label">SYSTEM</p>
-    <a href="#" class="nav-item"><span class="nav-icon">⚙</span> Settings</a>
-  </nav>
-  <div class="sidebar__footer">
-    <div class="user-avatar">AD</div>
-    <div class="user-meta"><span class="user-name">Admin User</span><span class="user-role">IT Administrator</span></div>
-    <a href="index.html" class="logout-btn">⏻</a>
-  </div>
-</aside>
+{% extends "base.html" %}
 
-<div class="main">
-  <header class="topbar">
-    <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-    <div class="topbar__left"><h2 class="page-heading">Knowledge Base</h2><span class="page-sub">Self-service IT guides and how-to articles</span></div>
-    <div class="topbar__right">
-      <div class="search-box"><span>🔍</span><input type="text" placeholder="Search articles…" oninput="filterKB(this.value)"/></div>
-      <button class="icon-btn">🔔<span class="notif-dot"></span></button>
-      <div class="topbar-avatar">AD</div>
-    </div>
-  </header>
+{% block title %}Knowledge Base – School IT Support System{% endblock %}
 
-  <div class="page-content">
+{% block page_heading %}Knowledge Base{% endblock %}
 
-    <div class="stats-row">
-      <div class="stat-mini" style="--d:.05s"><div class="stat-mini__icon" style="background:rgba(122,179,212,.12)">📄</div><div><div class="stat-mini__val">24</div><div class="stat-mini__label">Total Articles</div></div></div>
-      <div class="stat-mini" style="--d:.1s"> <div class="stat-mini__icon" style="background:rgba(76,175,130,.12)">✔</div><div><div class="stat-mini__val">20</div><div class="stat-mini__label">Published</div></div></div>
-      <div class="stat-mini" style="--d:.15s"><div class="stat-mini__icon" style="background:rgba(224,168,64,.12)">👁</div><div><div class="stat-mini__val">1.4k</div><div class="stat-mini__label">Total Views</div></div></div>
-      <div class="stat-mini" style="--d:.2s"> <div class="stat-mini__icon" style="background:rgba(176,127,212,.12)">✏</div><div><div class="stat-mini__val">4</div><div class="stat-mini__label">Drafts</div></div></div>
-    </div>
+{% block page_sub %}Self-service IT guides and how-to articles{% endblock %}
 
-    <!-- Filter + New -->
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <button class="btn btn-ghost cat-btn active-cat" data-cat="all" onclick="filterCat(this,'all')">All</button>
-        <button class="btn btn-ghost cat-btn" data-cat="network"  onclick="filterCat(this,'network')">🌐 Network</button>
-        <button class="btn btn-ghost cat-btn" data-cat="hardware" onclick="filterCat(this,'hardware')">🖥 Hardware</button>
-        <button class="btn btn-ghost cat-btn" data-cat="software" onclick="filterCat(this,'software')">💾 Software</button>
-        <button class="btn btn-ghost cat-btn" data-cat="account"  onclick="filterCat(this,'account')">👤 Account</button>
-        <button class="btn btn-ghost cat-btn" data-cat="general"  onclick="filterCat(this,'general')">📋 General</button>
-      </div>
-      <div class="toolbar-right">
-        <button class="btn btn-primary" onclick="openModal('articleModal')">➕ New Article</button>
-      </div>
-    </div>
+{% block extra_css %}
+<style>
+.kb-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.stat-card { background: var(--bg2); padding: 16px; border-radius: 8px; border-left: 4px solid var(--primary); }
+.stat-val { font-size: 24px; font-weight: 600; }
+.stat-label { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
 
-    <!-- Article Cards -->
-    <div class="kb-grid" id="kbGrid">
+.kb-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.search-input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg1); color: var(--text); font-size: 14px; flex: 1; min-width: 200px; }
+.category-filter { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg1); color: var(--text); font-size: 14px; }
+.btn-new { padding: 10px 16px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+.btn-new:hover { opacity: 0.9; }
 
-      <div class="kb-card" data-cat="network" onclick="openModal('readModal')">
-        <div class="kb-card__cat">🌐 Network</div>
-        <div class="kb-card__title">How to Connect to SchoolNet WiFi</div>
-        <div class="kb-card__excerpt">Step-by-step guide to connecting your device to the school wireless network using your student or faculty credentials.</div>
-        <div class="kb-card__foot"><span class="kb-card__views">👁 145 views</span><span class="kb-card__author">by Admin</span></div>
-      </div>
+.kb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.kb-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.2s; }
+.kb-card:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
 
-      <div class="kb-card" data-cat="account" onclick="openModal('readModal')">
-        <div class="kb-card__cat">👤 Account</div>
-        <div class="kb-card__title">Resetting Your School Email Password</div>
-        <div class="kb-card__excerpt">How to recover access to your school email account using the self-service portal or by contacting IT support.</div>
-        <div class="kb-card__foot"><span class="kb-card__views">👁 230 views</span><span class="kb-card__author">by Admin</span></div>
-      </div>
+.kb-card-cat { display: inline-block; padding: 4px 8px; background: rgba(122,179,212,0.2); color: #7ab3d4; border-radius: 3px; font-size: 11px; font-weight: 600; margin-bottom: 8px; }
+.kb-card-title { font-weight: 600; font-size: 15px; margin-bottom: 8px; line-height: 1.4; }
+.kb-card-excerpt { font-size: 13px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.5; }
+.kb-card-meta { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-dim); }
+.kb-card-actions { display: flex; gap: 6px; margin-top: 12px; }
+.btn-sm { padding: 6px 12px; font-size: 12px; border: 1px solid var(--border); background: transparent; color: var(--text); border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+.btn-sm:hover { background: var(--primary); color: white; border-color: var(--primary); }
 
-      <div class="kb-card" data-cat="hardware" onclick="openModal('readModal')">
-        <div class="kb-card__cat">🖥 Hardware</div>
-        <div class="kb-card__title">Troubleshooting a Printer Offline Error</div>
-        <div class="kb-card__excerpt">Fix common printer offline issues in Windows without calling IT support. Covers queue clearing and driver reset steps.</div>
-        <div class="kb-card__foot"><span class="kb-card__views">👁 89 views</span><span class="kb-card__author">by IT Staff</span></div>
-      </div>
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--bg1); border-radius: 8px; width: 90%; max-width: 600px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
 
-      <div class="kb-card" data-cat="software" onclick="openModal('readModal')">
-        <div class="kb-card__cat">💾 Software</div>
-        <div class="kb-card__title">Installing Microsoft Office on School Laptops</div>
-        <div class="kb-card__excerpt">Instructions for activating and installing MS Office 365 using your school-issued license key and account credentials.</div>
-        <div class="kb-card__foot"><span class="kb-card__views">👁 178 views</span><span class="kb-card__author">by IT Staff</span></div>
-      </div>
+.modal__head { display: flex; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid var(--border); }
+.modal__title { font-weight: 600; font-size: 16px; }
+.modal__close { background: none; border: none; font-size: 20px; color: var(--text-dim); cursor: pointer; }
+.modal__body { padding: 20px; max-height: 600px; overflow-y: auto; }
+.modal__foot { display: flex; gap: 10px; justify-content: flex-end; padding: 20px; border-top: 1px solid var(--border); }
 
-      <div class="kb-card" data-cat="network" onclick="openModal('readModal')">
-        <div class="kb-card__cat">🌐 Network</div>
-        <div class="kb-card__title">Setting Up a VPN for Remote Access</div>
-        <div class="kb-card__excerpt">How to configure the school VPN client on Windows and Mac to securely access school resources from home.</div>
-        <div class="kb-card__foot"><span class="kb-card__views">👁 63 views</span><span class="kb-card__author">by Admin</span></div>
-      </div>
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.form-label { font-size: 13px; font-weight: 600; }
+.form-control { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg2); color: var(--text); font-size: 14px; }
+.form-control-large { min-height: 120px; }
 
-      <div class="kb-card" data-cat="general" onclick="openModal('readModal')">
-        <div class="kb-card__cat">📋 General</div>
-        <div class="kb-card__title">How to Submit an IT Support Ticket</div>
-        <div class="kb-card__excerpt">Learn how to properly submit a support request including what information to include for faster resolution.</div>
-        <div class="kb-card__foot"><span class="kb-card__views">👁 312 views</span><span class="kb-card__author">by Admin</span></div>
-      </div>
+.toast { position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; padding: 12px 16px; border-radius: 6px; z-index: 2000; animation: slideIn 0.3s; }
+@keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
-      <div class="kb-card" data-cat="hardware" onclick="openModal('readModal')">
-        <div class="kb-card__cat">🖥 Hardware</div>
-        <div class="kb-card__title">Projector Setup and Troubleshooting</div>
-        <div class="kb-card__excerpt">How to connect your laptop to a classroom projector via HDMI or wireless display, and fix common display issues.</div>
-        <div class="kb-card__foot"><span class="kb-card__views">👁 97 views</span><span class="kb-card__author">by IT Staff</span></div>
-      </div>
+.empty-state { text-align: center; padding: 40px; color: var(--text-dim); }
+.empty-state-icon { font-size: 48px; margin-bottom: 12px; }
+</style>
+{% endblock %}
 
-      <div class="kb-card" data-cat="account" onclick="openModal('readModal')">
-        <div class="kb-card__cat">👤 Account</div>
-        <div class="kb-card__title">Setting Up Two-Factor Authentication</div>
-        <div class="kb-card__excerpt">Secure your school account with 2FA using the Microsoft Authenticator app for added protection against unauthorized access.</div>
-        <div class="kb-card__foot"><span class="kb-card__views">👁 54 views</span><span class="kb-card__author">by Admin</span></div>
-      </div>
+{% block content %}
 
-    </div>
-  </div>
+<div class="kb-stats">
+  <div class="stat-card"><div class="stat-val" id="totalArticles">0</div><div class="stat-label">Total Articles</div></div>
+  <div class="stat-card"><div class="stat-val" id="publishedCount">0</div><div class="stat-label">Published</div></div>
+  <div class="stat-card"><div class="stat-val" id="totalViews">0</div><div class="stat-label">Total Views</div></div>
+  <div class="stat-card"><div class="stat-val" id="draftCount">0</div><div class="stat-label">Drafts</div></div>
+</div>
+
+<div class="kb-controls">
+  <input type="text" class="search-input" id="searchInput" placeholder="Search articles by title or content…" oninput="filterArticles()"/>
+  <select class="category-filter" id="categoryFilter" onchange="filterArticles()">
+    <option value="">All Categories</option>
+    <option value="general">General</option>
+    <option value="network">Network</option>
+    <option value="hardware">Hardware</option>
+    <option value="software">Software</option>
+    <option value="account">Account</option>
+  </select>
+  <button class="btn-new" onclick="openNewArticleModal()">➕ New Article</button>
+</div>
+
+<div class="kb-grid" id="kbGrid">
+  <!-- Articles loaded dynamically -->
 </div>
 
 <!-- READ ARTICLE MODAL -->
 <div class="modal-overlay" id="readModal">
   <div class="modal" style="max-width:620px">
     <div class="modal__head">
-      <span class="modal__title">How to Connect to SchoolNet WiFi</span>
+      <span class="modal__title" id="readTitle">Article Title</span>
       <button class="modal__close" onclick="closeModal('readModal')">✕</button>
     </div>
     <div class="modal__body">
       <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-        <span class="kb-card__cat" style="font-size:.72rem;letter-spacing:.14em;color:var(--accent)">🌐 NETWORK</span>
-        <span style="font-size:.75rem;color:var(--text-dim)">By Admin · 145 views · Published Mar 1, 2025</span>
+        <span id="readCategory" style="font-size:0.8rem;letter-spacing:0.14em;color:var(--primary);font-weight:600"></span>
+        <span style="font-size:0.75rem;color:var(--text-dim)"><span id="readViews">0</span> views · <span id="readAuthor">Unknown</span></span>
       </div>
-      <div style="font-size:.9rem;line-height:1.75;color:var(--text-dim)">
-        <p style="margin-bottom:12px">Follow these steps to connect your device to the school's wireless network <strong style="color:var(--text)">SchoolNet</strong>:</p>
-        <ol style="padding-left:20px;display:flex;flex-direction:column;gap:8px">
-          <li>Click the <strong style="color:var(--text)">WiFi icon</strong> on your system taskbar (bottom-right on Windows, top-right on Mac).</li>
-          <li>Select <strong style="color:var(--text)">SchoolNet</strong> from the list of available networks.</li>
-          <li>When prompted, enter your <strong style="color:var(--text)">school email</strong> as the username and your <strong style="color:var(--text)">account password</strong>.</li>
-          <li>Click <strong style="color:var(--text)">Connect</strong>. Your device will authenticate and connect within a few seconds.</li>
-          <li>If prompted about a security certificate, click <strong style="color:var(--text)">Accept / Trust</strong>.</li>
-        </ol>
-        <p style="margin-top:14px;padding:12px;background:var(--bg3);border-left:3px solid var(--warn);border-radius:0 3px 3px 0;font-size:.82rem">
-          ⚠ If you continue to experience connection issues, please <a href="{{ url_for('tickets_page') }}" style="color:var(--accent)">submit a support ticket</a> with your device type and error message.
-        </p>
-      </div>
+      <div id="readContent" style="font-size:0.9rem;line-height:1.75;color:var(--text-dim)"></div>
     </div>
     <div class="modal__foot">
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('readModal')">Close</button>
-      <button class="btn btn-ghost btn-sm" onclick="openModal('articleModal');closeModal('readModal')">✏ Edit</button>
+      <button class="btn-sm" onclick="closeModal('readModal')">Close</button>
+      <button class="btn-sm" id="editBtn" style="display:none" onclick="editCurrentArticle()">✏ Edit</button>
+      <button class="btn-sm" id="deleteBtn" style="display:none;background:#dc3545;color:white;border-color:#dc3545" onclick="deleteCurrentArticle()">🗑 Delete</button>
     </div>
   </div>
 </div>
 
-<!-- NEW / EDIT ARTICLE MODAL -->
+<!-- CREATE/EDIT ARTICLE MODAL -->
 <div class="modal-overlay" id="articleModal">
   <div class="modal" style="max-width:600px">
-    <div class="modal__head"><span class="modal__title">New Article</span><button class="modal__close" onclick="closeModal('articleModal')">✕</button></div>
+    <div class="modal__head">
+      <span class="modal__title" id="articleModalTitle">New Article</span>
+      <button class="modal__close" onclick="closeModal('articleModal')">✕</button>
+    </div>
     <div class="modal__body">
-      <div class="form-row">
-        <div class="form-group full"><label class="form-label">Title</label><input class="form-control" placeholder="Article title…"/></div>
-        <div class="form-group"><label class="form-label">Category</label><select class="form-control"><option>General</option><option>Network</option><option>Hardware</option><option>Software</option><option>Account</option></select></div>
-        <div class="form-group"><label class="form-label">Status</label><select class="form-control"><option>Draft</option><option>Published</option></select></div>
-        <div class="form-group full"><label class="form-label">Content</label><textarea class="form-control" style="min-height:160px" placeholder="Write article content here…"></textarea></div>
+      <input type="hidden" id="articleId"/>
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input type="text" class="form-control" id="formTitle" placeholder="Article title…"/>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-control" id="formCategory">
+            <option value="general">General</option>
+            <option value="network">Network</option>
+            <option value="hardware">Hardware</option>
+            <option value="software">Software</option>
+            <option value="account">Account</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-control" id="formStatus">
+            <option value="false">Draft</option>
+            <option value="true">Published</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Content</label>
+        <textarea class="form-control form-control-large" id="formContent" placeholder="Write article content here…"></textarea>
       </div>
     </div>
     <div class="modal__foot">
-      <button class="btn btn-ghost" onclick="closeModal('articleModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="showToast('Article saved!');closeModal('articleModal')">Save Article</button>
+      <button class="btn-sm" onclick="closeModal('articleModal')">Cancel</button>
+      <button class="btn-new" onclick="submitArticleForm()">Save Article</button>
     </div>
   </div>
 </div>
 
-<style>
-.cat-btn { font-size:.8rem; padding:6px 12px; }
-.active-cat { background:var(--accent-bg)!important; border-color:var(--accent)!important; color:var(--accent)!important; }
-</style>
-
 <script>
-function openModal(id)  { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+let allArticles = [];
+let currentArticleId = null;
+
+async function loadArticles() {
+  try {
+    const res = await fetch('/api/kb/', { credentials: 'include' });
+    if (!res.ok) throw new Error('Failed to load articles');
+    allArticles = await res.json();
+    updateStats();
+    renderArticles(allArticles);
+  } catch (err) {
+    console.error(err);
+    showToast('❌ Error loading articles');
+  }
+}
+
+function updateStats() {
+  const total = allArticles.length;
+  const published = allArticles.filter(a => a.is_published).length;
+  const drafts = total - published;
+  const viewsTotal = allArticles.reduce((sum, a) => sum + (a.views || 0), 0);
+  
+  document.getElementById('totalArticles').textContent = total;
+  document.getElementById('publishedCount').textContent = published;
+  document.getElementById('draftCount').textContent = drafts;
+  document.getElementById('totalViews').textContent = viewsTotal;
+}
+
+function renderArticles(articles) {
+  const grid = document.getElementById('kbGrid');
+  if (articles.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📚</div><p>No articles found</p></div>';
+    return;
+  }
+  
+  grid.innerHTML = articles.map(a => `
+    <div class="kb-card">
+      <div class="kb-card-cat">${getCategoryEmoji(a.category)} ${a.category.toUpperCase()}</div>
+      <div class="kb-card-title">${a.title}</div>
+      <div class="kb-card-excerpt">${a.content.substring(0, 120)}…</div>
+      <div class="kb-card-meta">
+        <span>👁 ${a.views} views</span>
+        <span>${a.is_published ? '✓ Published' : '📝 Draft'}</span>
+      </div>
+      <div class="kb-card-actions">
+        <button class="btn-sm" onclick="readArticle(${a.id})">Read More</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function getCategoryEmoji(cat) {
+  const emojis = { general: '📋', network: '🌐', hardware: '🖥', software: '💾', account: '👤' };
+  return emojis[cat] || '📋';
+}
+
+function filterArticles() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const category = document.getElementById('categoryFilter').value;
+  
+  const filtered = allArticles.filter(a => {
+    const matchSearch = a.title.toLowerCase().includes(search) || a.content.toLowerCase().includes(search);
+    const matchCategory = !category || a.category === category;
+    return matchSearch && matchCategory;
+  });
+  
+  renderArticles(filtered);
+}
+
+async function readArticle(id) {
+  try {
+    const res = await fetch(`/api/kb/${id}`, { credentials: 'include' });
+    if (!res.ok) throw new Error('Failed to load article');
+    const article = await res.json();
+    
+    currentArticleId = article.id;
+    document.getElementById('readTitle').textContent = article.title;
+    document.getElementById('readCategory').textContent = getCategoryEmoji(article.category) + ' ' + article.category.toUpperCase();
+    document.getElementById('readViews').textContent = article.views || 0;
+    document.getElementById('readAuthor').textContent = article.author || 'Unknown';
+    document.getElementById('readContent').textContent = article.content;
+    
+    document.getElementById('editBtn').style.display = 'block';
+    document.getElementById('deleteBtn').style.display = 'block';
+    
+    openModal('readModal');
+  } catch (err) {
+    console.error(err);
+    showToast('❌ Error loading article');
+  }
+}
+
+function openNewArticleModal() {
+  currentArticleId = null;
+  document.getElementById('articleId').value = '';
+  document.getElementById('articleModalTitle').textContent = 'New Article';
+  document.getElementById('formTitle').value = '';
+  document.getElementById('formCategory').value = 'general';
+  document.getElementById('formStatus').value = 'false';
+  document.getElementById('formContent').value = '';
+  openModal('articleModal');
+}
+
+function editCurrentArticle() {
+  if (!currentArticleId) return;
+  const article = allArticles.find(a => a.id === currentArticleId);
+  if (!article) return;
+  
+  closeModal('readModal');
+  
+  document.getElementById('articleId').value = article.id;
+  document.getElementById('articleModalTitle').textContent = 'Edit Article';
+  document.getElementById('formTitle').value = article.title;
+  document.getElementById('formCategory').value = article.category;
+  document.getElementById('formStatus').value = article.is_published ? 'true' : 'false';
+  document.getElementById('formContent').value = article.content;
+  
+  openModal('articleModal');
+}
+
+async function submitArticleForm() {
+  const id = document.getElementById('articleId').value;
+  const data = {
+    title: document.getElementById('formTitle').value,
+    category: document.getElementById('formCategory').value,
+    is_published: document.getElementById('formStatus').value === 'true',
+    content: document.getElementById('formContent').value,
+  };
+  
+  if (!data.title || !data.content) {
+    showToast('❌ Please fill in all required fields');
+    return;
+  }
+  
+  try {
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `/api/kb/${id}` : '/api/kb/';
+    
+    const res = await fetch(url, {
+      method,
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    const responseData = await res.json();
+    if (!res.ok) throw new Error(responseData.error || 'Failed to save article');
+    
+    showToast('✅ Article saved successfully');
+    closeModal('articleModal');
+    loadArticles();
+  } catch (err) {
+    console.error(err);
+    showToast('❌ ' + err.message);
+  }
+}
+
+async function deleteCurrentArticle() {
+  if (!currentArticleId || !confirm('Delete this article permanently?')) return;
+  
+  try {
+    const res = await fetch(`/api/kb/${currentArticleId}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    
+    const responseData = await res.json();
+    if (!res.ok) throw new Error(responseData.error || 'Failed to delete article');
+    
+    showToast('✅ Article deleted');
+    closeModal('readModal');
+    loadArticles();
+  } catch (err) {
+    console.error(err);
+    showToast('❌ ' + err.message);
+  }
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
 function showToast(msg) {
-  const t=document.createElement('div'); t.className='toast'; t.textContent='✔  '+msg;
-  document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
 }
-function filterKB(val) {
-  val = val.toLowerCase();
-  document.querySelectorAll('.kb-card').forEach(c => {
-    c.style.display = c.textContent.toLowerCase().includes(val) ? '' : 'none';
-  });
-}
-function filterCat(btn, cat) {
-  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active-cat'));
-  btn.classList.add('active-cat');
-  document.querySelectorAll('.kb-card').forEach(c => {
-    c.style.display = (cat === 'all' || c.dataset.cat === cat) ? '' : 'none';
-  });
-}
+
 document.querySelectorAll('.modal-overlay').forEach(o => {
-  o.addEventListener('click', e => { if(e.target===o) o.classList.remove('open'); });
+  o.addEventListener('click', e => {
+    if (e.target === o) o.classList.remove('open');
+  });
 });
+
+loadArticles();
 </script>
-</body>
-</html>
+
+{% endblock %}

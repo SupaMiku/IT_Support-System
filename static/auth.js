@@ -112,9 +112,15 @@ async function handleRegister(event) {
   
   const form = event.target;
   const button = form.querySelector('button[type="submit"]');
-  const fullName = form.querySelector('input[type="text"]').value.trim();
-  const email = form.querySelector('input[type="email"]').value.trim();
-  const password = form.querySelector('input[type="password"]').value;
+  const fullName = form.querySelector('input[name="full_name"]').value.trim();
+  const email = form.querySelector('input[name="email"]').value.trim();
+  const password = form.querySelector('input[name="password"]').value;
+  
+  // Get role from the hidden input field
+  const roleInput = form.querySelector('input#selectedRole');
+  const role = roleInput ? roleInput.value : 'student';
+
+  console.log('Registration form data:', { fullName, email, role, inputValue: roleInput ? roleInput.value : 'NO INPUT FOUND' });
 
   // Validation
   hideError(form);
@@ -148,11 +154,14 @@ async function handleRegister(event) {
       body: JSON.stringify({
         full_name: fullName,
         email,
-        password
+        password,
+        role
       })
     });
 
     const data = await response.json();
+
+    console.log('Registration response:', { status: response.status, data });
 
     if (!response.ok) {
       showError(form, `❌ ${data.error || 'Registration failed'}`);

@@ -1,75 +1,390 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Announcements – School IT Support System</title>
-  <link rel="stylesheet" href="pages.css"/>
-  <link href="/static/css/pages.css" rel="stylesheet"/>
-</head>
-<body>
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar__brand"><span class="brand-gear">⚙</span><div class="brand-text"><span class="brand-title">SCHOOL IT</span><span class="brand-sub">Support System</span></div></div>
-  <nav class="sidebar__nav">
-    <p class="nav-section-label">MAIN</p>
-    <a href="{{ url_for('dashboard') }}" class="nav-item"><span class="nav-icon">▣</span> Dashboard</a>
-    <a href="{{ url_for('tickets_page') }}"   class="nav-item"><span class="nav-icon">🎫</span> Tickets<span class="nav-badge">12</span></a>
-    <a href="assets.html"    class="nav-item"><span class="nav-icon">🖥</span> Asset Inventory</a>
-    <a href="users.html"     class="nav-item"><span class="nav-icon">👥</span> User Management</a>
-    <p class="nav-section-label">SUPPORT</p>
-    <a href="kb.html"            class="nav-item"><span class="nav-icon">📚</span> Knowledge Base</a>
-    <a href="announcements.html" class="nav-item active"><span class="nav-icon">📢</span> Announcements<span class="nav-badge new">3</span></a>
-    <a href="reports.html"       class="nav-item"><span class="nav-icon">📊</span> Reports</a>
-    <p class="nav-section-label">SYSTEM</p>
-    <a href="#" class="nav-item"><span class="nav-icon">⚙</span> Settings</a>
-  </nav>
-  <div class="sidebar__footer">
-    <div class="user-avatar">AD</div>
-    <div class="user-meta"><span class="user-name">Admin User</span><span class="user-role">IT Administrator</span></div>
-    <a href="index.html" class="logout-btn">⏻</a>
+{% extends "base.html" %}
+
+{% block title %}Announcements – School IT Support System{% endblock %}
+
+{% block page_heading %}Announcements{% endblock %}
+
+{% block page_sub %}IT news, maintenance schedules and system alerts{% endblock %}
+
+{% block extra_css %}
+<style>
+.announce-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; width: 100%; }
+.stat-card { background: var(--bg2); padding: 16px; border-radius: 8px; border-left: 4px solid var(--primary); text-align: center; }
+.stat-val { font-size: 24px; font-weight: 600; display: block; }
+.stat-label { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+.announce-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; width: 100%; }
+.controls-left { display: flex; align-items: center; gap: 12px; flex: 1; flex-wrap: wrap; }
+.search-input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg1); color: var(--text); font-size: 14px; flex: 1; min-width: 200px; }
+.priority-filter { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg1); color: var(--text); font-size: 14px; }
+.btn-new { padding: 10px 16px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; white-space: nowrap; }
+.btn-new:hover { opacity: 0.9; }
+
+.announce-list { display: flex; flex-direction: column; gap: 12px; }
+.announce-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; border-left: 4px solid var(--border); transition: all 0.2s; display: flex; flex-direction: column; }
+.announce-item:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+.announce-item.priority-high { border-left-color: #dc3545; }
+.announce-item.priority-urgent { border-left-color: #ff6b6b; }
+.announce-item.priority-normal { border-left-color: #4a90e2; }
+
+.announce-item-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+.announce-title { font-weight: 600; font-size: 16px; margin: 0; flex: 1; }
+.announce-content { font-size: 14px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.5; }
+.announce-meta { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--text-dim); flex-wrap: wrap; margin-bottom: 12px; }
+.announce-actions { display: flex; gap: 6px; margin-top: auto; align-self: flex-start; }
+.btn-sm { padding: 8px 14px; font-size: 13px; border: 1px solid var(--border); background: transparent; color: var(--text); border-radius: 4px; cursor: pointer; transition: all 0.2s; text-align: center; }
+.btn-sm:hover { background: var(--primary); color: white; border-color: var(--primary); }
+.btn-danger { background: #dc3545; color: white; border-color: #dc3545; }
+.btn-danger:hover { background: #c82333; border-color: #c82333; }
+
+.priority-badge { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 11px; font-weight: 600; }
+.priority-high { background: rgba(220, 53, 69, 0.2); color: #dc3545; }
+.priority-urgent { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+.priority-normal { background: rgba(122, 179, 212, 0.2); color: #4a90e2; }
+
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--bg1); border-radius: 8px; width: 90%; max-width: 600px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+
+.modal__head { display: flex; align-items: center; justify-content: space-between; padding: 20px; border-bottom: 1px solid var(--border); }
+.modal__title { font-weight: 600; font-size: 16px; }
+.modal__close { background: none; border: none; font-size: 20px; color: var(--text-dim); cursor: pointer; }
+.modal__body { padding: 20px; max-height: 70vh; overflow-y: auto; }
+.modal__foot { display: flex; gap: 10px; justify-content: flex-end; align-items: center; padding: 20px; border-top: 1px solid var(--border); }
+
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.form-label { font-size: 13px; font-weight: 600; text-align: left; }
+.form-control { padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg2); color: var(--text); font-size: 14px; width: 100%; box-sizing: border-box; }
+.form-control-large { min-height: 120px; resize: vertical; }
+
+.toast { position: fixed; bottom: 20px; right: 20px; background: var(--primary); color: white; padding: 12px 16px; border-radius: 6px; z-index: 2000; animation: slideIn 0.3s; }
+@keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+.empty-state { text-align: center; padding: 40px; color: var(--text-dim); }
+.empty-state-icon { font-size: 48px; margin-bottom: 12px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="announce-stats">
+  <div class="stat-card"><div class="stat-val" id="totalAnnouncements">0</div><div class="stat-label">Total</div></div>
+  <div class="stat-card"><div class="stat-val" id="publishedCount">0</div><div class="stat-label">Published</div></div>
+  <div class="stat-card"><div class="stat-val" id="highPriorityCount">0</div><div class="stat-label">High Priority</div></div>
+  <div class="stat-card"><div class="stat-val" id="urgentCount">0</div><div class="stat-label">Urgent</div></div>
+</div>
+
+<div class="announce-controls">
+  <div class="controls-left">
+    <input type="text" class="search-input" id="searchInput" placeholder="Search announcements…" oninput="filterAnnouncements()"/>
+    <select class="priority-filter" id="priorityFilter" onchange="filterAnnouncements()">
+      <option value="">All Priorities</option>
+      <option value="normal">Normal</option>
+      <option value="high">High</option>
+      <option value="urgent">Urgent</option>
+    </select>
   </div>
-</aside>
+  <button class="btn-new" onclick="openNewAnnouncementModal()">📢 New Announcement</button>
+</div>
 
-<div class="main">
-  <header class="topbar">
-    <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
-    <div class="topbar__left"><h2 class="page-heading">Announcements</h2><span class="page-sub">IT news, maintenance schedules and system alerts</span></div>
-    <div class="topbar__right">
-      <div class="search-box"><span>🔍</span><input type="text" placeholder="Search…" oninput="filterAnnounce(this.value)"/></div>
-      <button class="icon-btn">🔔<span class="notif-dot"></span></button>
-      <div class="topbar-avatar">AD</div>
+<div class="announce-list" id="announceList">
+  <!-- Announcements loaded dynamically -->
+</div>
+
+<!-- READ ANNOUNCEMENT MODAL -->
+<div class="modal-overlay" id="readModal">
+  <div class="modal">
+    <div class="modal__head">
+      <span class="modal__title" id="readTitle">Announcement</span>
+      <button class="modal__close" onclick="closeModal('readModal')">✕</button>
     </div>
-  </header>
-
-  <div class="page-content">
-
-    <div class="stats-row">
-      <div class="stat-mini" style="--d:.05s"><div class="stat-mini__icon" style="background:rgba(122,179,212,.12)">📢</div><div><div class="stat-mini__val">12</div><div class="stat-mini__label">Total</div></div></div>
-      <div class="stat-mini" style="--d:.1s"> <div class="stat-mini__icon" style="background:rgba(76,175,130,.12)">✔</div><div><div class="stat-mini__val">9</div><div class="stat-mini__label">Active</div></div></div>
-      <div class="stat-mini" style="--d:.15s"><div class="stat-mini__icon" style="background:rgba(224,85,85,.12)">🚨</div><div><div class="stat-mini__val">2</div><div class="stat-mini__label">High Priority</div></div></div>
-      <div class="stat-mini" style="--d:.2s"> <div class="stat-mini__icon" style="background:rgba(224,168,64,.12)">⏰</div><div><div class="stat-mini__val">3</div><div class="stat-mini__label">Expiring Soon</div></div></div>
-    </div>
-
-    <div class="toolbar">
-      <div class="toolbar-left">
-        <select class="filter-select" id="prioFilter" onchange="filterByPriority()">
-          <option value="">All Priorities</option>
-          <option value="high">High</option>
-          <option value="normal">Normal</option>
-          <option value="urgent">Urgent</option>
-        </select>
-        <select class="filter-select">
-          <option>Published</option><option>Drafts</option><option>Expired</option>
-        </select>
+    <div class="modal__body">
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px">
+        <span class="priority-badge" id="readPriority">Normal</span>
+        <span style="font-size:12px;color:var(--text-dim)">Posted by <span id="readAuthor">Unknown</span></span>
       </div>
-      <div class="toolbar-right">
-        <button class="btn btn-primary" onclick="openModal('newAnnModal')">📢 New Announcement</button>
+      <div id="readContent" style="font-size:14px;line-height:1.6;color:var(--text-dim);margin-bottom:16px"></div>
+      <div style="font-size:12px;color:var(--text-dim)">
+        <span id="readExpires" style="display:none">Expires: <span id="readExpiresDate"></span></span>
       </div>
     </div>
+    <div class="modal__foot">
+      <button class="btn-sm" onclick="closeModal('readModal')">Close</button>
+      <button class="btn-sm" id="editBtn" style="display:none" onclick="editCurrentAnnouncement()">✏ Edit</button>
+      <button class="btn-danger btn-sm" id="deleteBtn" style="display:none" onclick="deleteCurrentAnnouncement()">🗑 Delete</button>
+    </div>
+  </div>
+</div>
 
-    <div class="panel">
-      <div class="panel__head"><span class="panel__title">All Announcements</span></div>
-      <div class="announce-list" id="announceList">
+<!-- CREATE/EDIT ANNOUNCEMENT MODAL -->
+<div class="modal-overlay" id="announcementModal">
+  <div class="modal">
+    <div class="modal__head">
+      <span class="modal__title" id="announcementModalTitle">New Announcement</span>
+      <button class="modal__close" onclick="closeModal('announcementModal')">✕</button>
+    </div>
+    <div class="modal__body">
+      <input type="hidden" id="announcementId"/>
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input type="text" class="form-control" id="formTitle" placeholder="Announcement title…"/>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          <select class="form-control" id="formPriority">
+            <option value="normal">Normal</option>
+            <option value="high">High</option>
+            <option value="urgent">Urgent</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select class="form-control" id="formStatus">
+            <option value="false">Draft</option>
+            <option value="true">Published</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Content</label>
+        <textarea class="form-control form-control-large" id="formContent" placeholder="Write announcement details…"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Expires On (optional)</label>
+        <input type="date" class="form-control" id="formExpires"/>
+      </div>
+    </div>
+    <div class="modal__foot">
+      <button class="btn-sm" onclick="closeModal('announcementModal')">Cancel</button>
+      <button class="btn-new" onclick="submitAnnouncementForm()">Save Announcement</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let allAnnouncements = [];
+let currentAnnouncementId = null;
+
+async function loadAnnouncements() {
+  try {
+    const res = await fetch('/api/announcements/', { credentials: 'include' });
+    if (!res.ok) throw new Error('Failed to load announcements');
+    allAnnouncements = await res.json();
+    updateStats();
+    renderAnnouncements(allAnnouncements);
+  } catch (err) {
+    console.error(err);
+    showToast('❌ Error loading announcements');
+  }
+}
+
+function updateStats() {
+  const total = allAnnouncements.length;
+  const published = allAnnouncements.filter(a => a.is_published).length;
+  const high = allAnnouncements.filter(a => a.priority === 'high').length;
+  const urgent = allAnnouncements.filter(a => a.priority === 'urgent').length;
+  
+  document.getElementById('totalAnnouncements').textContent = total;
+  document.getElementById('publishedCount').textContent = published;
+  document.getElementById('highPriorityCount').textContent = high;
+  document.getElementById('urgentCount').textContent = urgent;
+}
+
+function renderAnnouncements(announcements) {
+  const list = document.getElementById('announceList');
+  if (announcements.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📢</div><p>No announcements</p></div>';
+    return;
+  }
+  
+  list.innerHTML = announcements.map(a => `
+    <div class="announce-item priority-${a.priority}">
+      <div class="announce-item-header">
+        <div class="announce-title">${a.title}</div>
+      </div>
+      <div class="announce-content">${a.content.substring(0, 150)}…</div>
+      <div class="announce-meta">
+        <span>Posted by ${a.author || 'Unknown'}</span>
+        <span class="priority-badge priority-${a.priority}">${a.priority.toUpperCase()}</span>
+        ${a.is_published ? '<span>✓ Published</span>' : '<span>📝 Draft</span>'}
+      </div>
+      <div class="announce-actions">
+        <button class="btn-sm" onclick="readAnnouncement(${a.id})">Read</button>
+        <button class="btn-sm" onclick="editAnnouncement(${a.id})">Edit</button>
+        <button class="btn-danger btn-sm" onclick="deleteAnnouncement(${a.id})">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterAnnouncements() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const priority = document.getElementById('priorityFilter').value;
+  
+  const filtered = allAnnouncements.filter(a => {
+    const matchSearch = a.title.toLowerCase().includes(search) || a.content.toLowerCase().includes(search);
+    const matchPriority = !priority || a.priority === priority;
+    return matchSearch && matchPriority;
+  });
+  
+  renderAnnouncements(filtered);
+}
+
+async function readAnnouncement(id) {
+  try {
+    const res = await fetch(`/api/announcements/${id}`, { credentials: 'include' });
+    if (!res.ok) throw new Error('Failed to load announcement');
+    const ann = await res.json();
+    
+    currentAnnouncementId = ann.id;
+    document.getElementById('readTitle').textContent = ann.title;
+    document.getElementById('readPriority').textContent = ann.priority.toUpperCase();
+    document.getElementById('readPriority').className = `priority-badge priority-${ann.priority}`;
+    document.getElementById('readAuthor').textContent = ann.author || 'Unknown';
+    document.getElementById('readContent').textContent = ann.content;
+    
+    if (ann.expires_at) {
+      document.getElementById('readExpires').style.display = 'block';
+      document.getElementById('readExpiresDate').textContent = new Date(ann.expires_at).toLocaleDateString();
+    } else {
+      document.getElementById('readExpires').style.display = 'none';
+    }
+    
+    document.getElementById('editBtn').style.display = 'block';
+    document.getElementById('deleteBtn').style.display = 'block';
+    
+    openModal('readModal');
+  } catch (err) {
+    console.error(err);
+    showToast('❌ Error loading announcement');
+  }
+}
+
+function openNewAnnouncementModal() {
+  currentAnnouncementId = null;
+  document.getElementById('announcementId').value = '';
+  document.getElementById('announcementModalTitle').textContent = 'New Announcement';
+  document.getElementById('formTitle').value = '';
+  document.getElementById('formPriority').value = 'normal';
+  document.getElementById('formStatus').value = 'true';
+  document.getElementById('formContent').value = '';
+  document.getElementById('formExpires').value = '';
+  openModal('announcementModal');
+}
+
+function editAnnouncement(id) {
+  const ann = allAnnouncements.find(a => a.id === id);
+  if (!ann) return;
+  
+  currentAnnouncementId = ann.id;
+  document.getElementById('announcementId').value = ann.id;
+  document.getElementById('announcementModalTitle').textContent = 'Edit Announcement';
+  document.getElementById('formTitle').value = ann.title;
+  document.getElementById('formPriority').value = ann.priority;
+  document.getElementById('formStatus').value = ann.is_published ? 'true' : 'false';
+  document.getElementById('formContent').value = ann.content;
+  document.getElementById('formExpires').value = ann.expires_at ? ann.expires_at.split('T')[0] : '';
+  
+  openModal('announcementModal');
+}
+
+function editCurrentAnnouncement() {
+  if (!currentAnnouncementId) return;
+  closeModal('readModal');
+  editAnnouncement(currentAnnouncementId);
+}
+
+async function submitAnnouncementForm() {
+  const id = document.getElementById('announcementId').value;
+  const data = {
+    title: document.getElementById('formTitle').value,
+    content: document.getElementById('formContent').value,
+    priority: document.getElementById('formPriority').value,
+    is_published: document.getElementById('formStatus').value === 'true',
+    expires_at: document.getElementById('formExpires').value || null,
+  };
+  
+  if (!data.title || !data.content) {
+    showToast('❌ Please fill in all required fields');
+    return;
+  }
+  
+  try {
+    const method = id ? 'PUT' : 'POST';
+    const url = id ? `/api/announcements/${id}` : '/api/announcements/';
+    
+    const res = await fetch(url, {
+      method,
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    const responseData = await res.json();
+    if (!res.ok) throw new Error(responseData.error || 'Failed to save');
+    
+    showToast('✅ Announcement saved');
+    closeModal('announcementModal');
+    loadAnnouncements();
+  } catch (err) {
+    console.error(err);
+    showToast('❌ ' + err.message);
+  }
+}
+
+async function deleteAnnouncement(id) {
+  if (!confirm('Delete this announcement permanently?')) return;
+  
+  try {
+    const res = await fetch(`/api/announcements/${id}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+    
+    const responseData = await res.json();
+    if (!res.ok) throw new Error(responseData.error || 'Failed to delete');
+    
+    showToast('✅ Announcement deleted');
+    loadAnnouncements();
+  } catch (err) {
+    console.error(err);
+    showToast('❌ ' + err.message);
+  }
+}
+
+function deleteCurrentAnnouncement() {
+  if (!currentAnnouncementId) return;
+  closeModal('readModal');
+  deleteAnnouncement(currentAnnouncementId);
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => {
+    if (e.target === o) o.classList.remove('open');
+  });
+});
+
+loadAnnouncements();
+</script>
+
+{% endblock %}
 
         <div class="announce-item" data-priority="high">
           <div class="announce-priority-bar bar-high"></div>

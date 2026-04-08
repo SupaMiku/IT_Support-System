@@ -61,10 +61,15 @@ def create_app():
 
     @app.route('/dashboard')
     def dashboard():
-        """Dashboard page"""
+        """Dashboard page - Staff/Admin only"""
         if 'user_id' not in session:
             return redirect(url_for('login'))
-        from models import Ticket, Asset, Announcement, User
+        from models import User
+        user = User.query.get(session['user_id'])
+        # Only allow admin and it_staff
+        if user and user.role.name == 'student':
+            return redirect(url_for('tickets_page'))
+        from models import Ticket, Asset, Announcement
         stats = {
             'total_tickets': Ticket.query.count(),
             'open_tickets': Ticket.query.filter_by(status='open').count(),
@@ -80,20 +85,38 @@ def create_app():
     def tickets_page():
         if 'user_id' not in session:
             return redirect(url_for('login'))
-        from models import Ticket
-        ticket_stats = {
-            'open': Ticket.query.filter_by(status='open').count(),
-            'in_progress': Ticket.query.filter_by(status='in_progress').count(),
-            'resolved': Ticket.query.filter_by(status='resolved').count(),
-            'critical': Ticket.query.filter_by(priority='critical').count(),
-        }
+        from models import Ticket, User
+        user = User.query.get(session['user_id'])
+        
+        # Students only see their own ticket stats
+        if user and user.role.name == 'student':
+            ticket_stats = {
+                'open': Ticket.query.filter_by(status='open', requester_id=user.id).count(),
+                'in_progress': Ticket.query.filter_by(status='in_progress', requester_id=user.id).count(),
+                'resolved': Ticket.query.filter_by(status='resolved', requester_id=user.id).count(),
+                'critical': Ticket.query.filter_by(priority='critical', requester_id=user.id).count(),
+            }
+        else:
+            # Staff and admin see all ticket stats
+            ticket_stats = {
+                'open': Ticket.query.filter_by(status='open').count(),
+                'in_progress': Ticket.query.filter_by(status='in_progress').count(),
+                'resolved': Ticket.query.filter_by(status='resolved').count(),
+                'critical': Ticket.query.filter_by(priority='critical').count(),
+            }
         # render the original template (legacy static design)
         return render_template('tickets.html', ticket_stats=ticket_stats)
 
     @app.route('/assets')
     def assets_page():
+        """Assets page - Staff/Admin only"""
         if 'user_id' not in session:
             return redirect(url_for('login'))
+        from models import User
+        user = User.query.get(session['user_id'])
+        # Only allow admin and it_staff
+        if user and user.role.name == 'student':
+            return redirect(url_for('tickets_page'))
         from models import Asset
         assets_stats = {
             'total': Asset.query.count(),
@@ -105,9 +128,14 @@ def create_app():
 
     @app.route('/users')
     def users_page():
+        """User Management page - Staff/Admin only"""
         if 'user_id' not in session:
             return redirect(url_for('login'))
         from models import User
+        user = User.query.get(session['user_id'])
+        # Only allow admin and it_staff
+        if user and user.role.name == 'student':
+            return redirect(url_for('tickets_page'))
         role_counts = {
             'admins': User.query.join(User.role).filter_by(name='admin').count(),
             'faculty': User.query.join(User.role).filter_by(name='faculty').count(),
@@ -145,8 +173,14 @@ def create_app():
 
     @app.route('/reports')
     def reports_page():
+        """Reports page - Staff/Admin only"""
         if 'user_id' not in session:
             return redirect(url_for('login'))
+        from models import User
+        user = User.query.get(session['user_id'])
+        # Only allow admin and it_staff
+        if user and user.role.name == 'student':
+            return redirect(url_for('tickets_page'))
         # compute some sample KPI numbers based on real data
         from models import Ticket
         total = Ticket.query.count()

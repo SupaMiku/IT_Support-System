@@ -155,6 +155,7 @@
             <div class="detail-meta">
               <div class="meta-item">
                 <span class="meta-label">Status</span>
+                {% if current_user and current_user.role.name != 'student' %}
                 <select id="detailStatus" onchange="updateTicketField('status')">
                   <option value="open">Open</option>
                   <option value="in_progress">In Progress</option>
@@ -162,15 +163,22 @@
                   <option value="resolved">Resolved</option>
                   <option value="closed">Closed</option>
                 </select>
+                {% else %}
+                <span id="detailStatus">Open</span>
+                {% endif %}
               </div>
               <div class="meta-item">
                 <span class="meta-label">Priority</span>
+                {% if current_user and current_user.role.name != 'student' %}
                 <select id="detailPriority" onchange="updateTicketField('priority')">
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
                   <option value="critical">Critical</option>
                 </select>
+                {% else %}
+                <span id="detailPriority">Medium</span>
+                {% endif %}
               </div>
               <div class="meta-item">
                 <span class="meta-label">Category</span>
@@ -187,12 +195,14 @@
                 <span class="meta-label">Requester</span>
                 <span id="detailRequester">-</span>
               </div>
+              {% if current_user and current_user.role.name != 'student' %}
               <div class="meta-item">
                 <span class="meta-label">Assigned To</span>
                 <select id="detailAssignedTo" onchange="updateTicketField('assigned_to_id')">
                   <option value="">Unassigned</option>
                 </select>
               </div>
+              {% endif %}
               <div class="meta-item">
                 <span class="meta-label">Created</span>
                 <span id="detailCreated">-</span>
@@ -212,17 +222,19 @@
             <div class="comments-list" id="commentsList">
               <!-- Comments loaded dynamically -->
             </div>
+            {% if current_user and current_user.role.name != 'student' %}
             <div class="comment-form">
               <textarea id="commentInput" placeholder="Add a comment…" rows="3"></textarea>
               <button class="btn-small" onclick="addComment()">Post Comment</button>
             </div>
+            {% endif %}
           </div>
         </div>
       </div>
     </div>
 
     <div class="modal-footer">
-      <button type="button" class="btn-danger" onclick="deleteTicket()">Delete Ticket</button>
+      <button type="button" class="btn-danger" id="deleteBtn" onclick="deleteTicket()" style="display:none">Delete Ticket</button>
       <button type="button" class="btn-secondary" onclick="closeDetailModal()">Close</button>
     </div>
   </div>
@@ -233,6 +245,8 @@ const API_BASE = '/api/tickets';
 let allTickets = [];
 let staffUsers = [];
 let currentTicketId = null;
+let currentUserId = {{ current_user.id if current_user else 'null' }};
+let currentUserRole = '{{ current_user.role.name if current_user else '' }}';
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
@@ -262,9 +276,26 @@ async function loadTickets() {
     const response = await fetch(`${API_BASE}/`);
     if (!response.ok) throw new Error('Failed to load tickets');
     allTickets = await response.json();
+    updateTicketStats(allTickets);
     renderTickets(allTickets);
   } catch (e) {
     console.error('Error loading tickets:', e);
+  }
+}
+
+function updateTicketStats(tickets) {
+  const openCount = tickets.filter(t => t.status === 'open').length;
+  const inProgressCount = tickets.filter(t => t.status === 'in_progress').length;
+  const resolvedCount = tickets.filter(t => t.status === 'resolved').length;
+  const criticalCount = tickets.filter(t => t.priority === 'critical').length;
+  
+  // Update the stat boxes on the page
+  const statBoxes = document.querySelectorAll('.stat-box');
+  if (statBoxes.length >= 4) {
+    statBoxes[0].querySelector('.stat-number').textContent = openCount;
+    statBoxes[1].querySelector('.stat-number').textContent = inProgressCount;
+    statBoxes[2].querySelector('.stat-number').textContent = resolvedCount;
+    statBoxes[3].querySelector('.stat-number').textContent = criticalCount;
   }
 }
 
@@ -272,14 +303,20 @@ function renderTickets(tickets) {
   const tbody = document.getElementById('ticketsList');
   const noData = document.getElementById('noTickets');
   
+  // For students, filter to only show their own tickets
+  let displayTickets = tickets;
+  if (currentUserRole === 'student') {
+    displayTickets = tickets.filter(t => t.requester_id === currentUserId);
+  }
+  
   tbody.innerHTML = '';
-  if (tickets.length === 0) {
+  if (displayTickets.length === 0) {
     noData.style.display = 'flex';
     return;
   }
   noData.style.display = 'none';
 
-  tickets.forEach(ticket => {
+  displayTickets.forEach(ticket => {
     const row = document.createElement('tr');
     row.className = `priority-${ticket.priority}`;
     row.onclick = () => openDetailModal(ticket.id);
@@ -358,15 +395,38 @@ async function openDetailModal(ticketId) {
     if (!response.ok) throw new Error('Ticket not found');
     const ticket = await response.json();
 
+    // Check if user can delete: either staff or ticket requester
+    const canDelete = currentUserRole !== 'student' || ticket.requester_id === currentUserId;
+    const deleteBtn = document.getElementById('deleteBtn');
+    deleteBtn.style.display = canDelete ? 'block' : 'none';
+
     document.getElementById('detailId').textContent = ticket.id;
     document.getElementById('detailTitle').textContent = ticket.title;
     document.getElementById('detailDescription').textContent = ticket.description;
     document.getElementById('detailCategory').textContent = ticket.category;
     document.getElementById('detailLocation').textContent = ticket.location || '-';
     document.getElementById('detailRequester').textContent = ticket.requester || '-';
-    document.getElementById('detailStatus').value = ticket.status;
-    document.getElementById('detailPriority').value = ticket.priority;
-    document.getElementById('detailAssignedTo').value = ticket.assigned_to_id || '';
+    
+    // Only set these fields if they exist in the DOM (for staff users)
+    const statusField = document.getElementById('detailStatus');
+    if (statusField && statusField.tagName === 'SELECT') {
+      statusField.value = ticket.status;
+    } else if (statusField && statusField.tagName === 'SPAN') {
+      statusField.textContent = ticket.status;
+    }
+    
+    const priorityField = document.getElementById('detailPriority');
+    if (priorityField && priorityField.tagName === 'SELECT') {
+      priorityField.value = ticket.priority;
+    } else if (priorityField && priorityField.tagName === 'SPAN') {
+      priorityField.textContent = ticket.priority;
+    }
+    
+    const assignedField = document.getElementById('detailAssignedTo');
+    if (assignedField) {
+      assignedField.value = ticket.assigned_to_id || '';
+    }
+    
     document.getElementById('detailCreated').textContent = new Date(ticket.created_at).toLocaleString();
     document.getElementById('detailUpdated').textContent = new Date(ticket.updated_at).toLocaleString();
 
@@ -387,11 +447,17 @@ async function updateTicketField(field) {
 
   let value;
   if (field === 'status') {
-    value = document.getElementById('detailStatus').value;
+    const el = document.getElementById('detailStatus');
+    if (!el || el.tagName !== 'SELECT') return; // Student can't update
+    value = el.value;
   } else if (field === 'priority') {
-    value = document.getElementById('detailPriority').value;
+    const el = document.getElementById('detailPriority');
+    if (!el || el.tagName !== 'SELECT') return; // Student can't update
+    value = el.value;
   } else if (field === 'assigned_to_id') {
-    value = document.getElementById('detailAssignedTo').value;
+    const el = document.getElementById('detailAssignedTo');
+    if (!el) return; // Student can't update
+    value = el.value;
     if (value === '') value = null;
   }
 
@@ -515,7 +581,15 @@ function applyFilters() {
   const priority = document.getElementById('priorityFilter').value;
   const category = document.getElementById('categoryFilter').value;
 
-  const filtered = allTickets.filter(ticket => {
+  let filtered = allTickets;
+  
+  // For students, first filter to only their tickets
+  if (currentUserRole === 'student') {
+    filtered = filtered.filter(t => t.requester_id === currentUserId);
+  }
+
+  // Then apply search and other filters
+  filtered = filtered.filter(ticket => {
     const matchesSearch = ticket.title.toLowerCase().includes(searchTerm) ||
                          ticket.description.toLowerCase().includes(searchTerm) ||
                          ticket.id.toString().includes(searchTerm);

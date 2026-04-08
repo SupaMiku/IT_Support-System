@@ -32,6 +32,16 @@ def create_announcement():
     db.session.commit()
     return jsonify(a.to_dict()), 201
 
+@announce_bp.route('/<int:ann_id>', methods=['GET'])
+def get_announcement(ann_id):
+    ann = Announcement.query.get_or_404(ann_id)
+    user = current_user()
+    # Non-staff users can only read published announcements
+    if not user or user.role.name not in ('admin', 'it_staff'):
+        if not ann.is_published:
+            return jsonify({'error': 'Access denied'}), 403
+    return jsonify(ann.to_dict()), 200
+
 @announce_bp.route('/<int:ann_id>', methods=['PUT'])
 def update_announcement(ann_id):
     user = current_user()

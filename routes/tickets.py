@@ -39,7 +39,12 @@ def notify(user_id, title, message, link=None):
 # ── List / Create ──────────────────────────────────────────────────
 @tickets_bp.route('/', methods=['GET'])
 def list_tickets():
+    user = current_user()
     q = Ticket.query
+    
+    # Students can only see their own tickets
+    if user and user.role.name == 'student':
+        q = q.filter(Ticket.requester_id == user.id)
 
     status   = request.args.get('status')
     priority = request.args.get('priority')
@@ -72,7 +77,8 @@ def create_ticket():
         priority=data.get('priority', 'medium'),
         location=data.get('location'),
         requester_id=user.id,
-        assigned_to_id=data.get('assigned_to_id'),
+        # Only admin and it_staff can assign tickets - students cannot
+        assigned_to_id=data.get('assigned_to_id') if user.role.name in ('admin', 'it_staff') else None,
         due_date=datetime.fromisoformat(data['due_date']) if data.get('due_date') else None,
     )
     db.session.add(ticket)
@@ -93,7 +99,13 @@ def create_ticket():
 # ── Single ticket ──────────────────────────────────────────────────
 @tickets_bp.route('/<int:ticket_id>', methods=['GET'])
 def get_ticket(ticket_id):
+    user = current_user()
     ticket = Ticket.query.get_or_404(ticket_id)
+    
+    # Students can only view their own tickets
+    if user and user.role.name == 'student' and ticket.requester_id != user.id:
+        return jsonify({'error': 'Access denied'}), 403
+    
     return jsonify(ticket.to_dict()), 200
 
 
@@ -104,10 +116,19 @@ def update_ticket(ticket_id):
         return jsonify({'error': 'Authentication required'}), 401
 
     ticket = Ticket.query.get_or_404(ticket_id)
-    data   = request.get_json()
+    
+    # Students can only update their own tickets and cannot change status
+    if user.role.name == 'student':
+        if ticket.requester_id != user.id:
+            return jsonify({'error': 'Access denied'}), 403
+
+    data = request.get_json()
 
     for field in ['title', 'description', 'category', 'priority', 'status', 'location', 'assigned_to_id']:
         if field in data:
+            # Students cannot update status, assigned_to_id, or priority
+            if user.role.name == 'student' and field in ['status', 'assigned_to_id', 'priority']:
+                continue
             setattr(ticket, field, data[field])
 
     if data.get('status') == 'resolved' and not ticket.resolved_at:
@@ -129,10 +150,15 @@ def update_ticket(ticket_id):
 @tickets_bp.route('/<int:ticket_id>', methods=['DELETE'])
 def delete_ticket(ticket_id):
     user = current_user()
-    if not user or user.role.name not in ('admin', 'it_staff'):
-        return jsonify({'error': 'Insufficient permissions'}), 403
+    if not user:
+        return jsonify({'error': 'Authentication required'}), 401
 
     ticket = Ticket.query.get_or_404(ticket_id)
+    
+    # Allow deletion if: staff/admin OR student who created the ticket
+    if user.role.name == 'student' and ticket.requester_id != user.id:
+        return jsonify({'error': 'You can only delete your own tickets'}), 403
+    
     log_action(user.id, 'ticket.delete', target_id=ticket.id, details=ticket.title)
     db.session.delete(ticket)
     db.session.commit()
@@ -158,6 +184,10 @@ def add_comment(ticket_id):
     user = current_user()
     if not user:
         return jsonify({'error': 'Authentication required'}), 401
+
+    # Only admin and it_staff can add comments
+    if user.role.name not in ('admin', 'it_staff'):
+        return jsonify({'error': 'Only IT staff and admins can comment on tickets'}), 403
 
     ticket = Ticket.query.get_or_404(ticket_id)
     data   = request.get_json()

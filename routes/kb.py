@@ -25,6 +25,11 @@ def list_articles():
 @kb_bp.route('/<int:article_id>', methods=['GET'])
 def get_article(article_id):
     article = KnowledgeBaseArticle.query.get_or_404(article_id)
+    user = current_user()
+    # Non-staff users can only read published articles
+    if not user or user.role.name not in ('admin', 'it_staff'):
+        if not article.is_published:
+            return jsonify({'error': 'Access denied'}), 403
     article.views += 1
     db.session.commit()
     return jsonify(article.to_dict()), 200

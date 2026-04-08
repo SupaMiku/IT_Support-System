@@ -16,58 +16,6 @@
     </header>
 
     <style>
-      .page-subtitle {
-        font-size: 0.9rem;
-        color: var(--text-dim, #999);
-        margin-top: 8px;
-      }
-
-      .user-type-selector {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-        gap: 12px;
-        margin: 24px 0 28px 0;
-      }
-
-      .user-type-option {
-        border: 2px solid var(--border, #ddd);
-        border-radius: 8px;
-        padding: 16px 12px;
-        cursor: pointer;
-        text-align: center;
-        transition: all 0.2s;
-        background: transparent;
-      }
-
-      .user-type-option:hover {
-        border-color: var(--primary, #4a90e2);
-        background: rgba(74, 144, 226, 0.05);
-      }
-
-      .user-type-option.active {
-        border-color: var(--primary, #4a90e2);
-        background: rgba(74, 144, 226, 0.1);
-        box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
-      }
-
-      .type-icon {
-        font-size: 32px;
-        margin-bottom: 8px;
-      }
-
-      .type-name {
-        font-weight: 600;
-        font-size: 0.95rem;
-        margin-bottom: 4px;
-        color: var(--text, #333);
-      }
-
-      .type-desc {
-        font-size: 0.75rem;
-        color: var(--text-dim, #999);
-        line-height: 1.3;
-      }
-
       .register-form {
         margin-top: 20px;
       }
@@ -77,44 +25,9 @@
 
       <div class="title-block">
         <h1 class="page-title">CREATE ACCOUNT</h1>
-        <p class="page-subtitle">Select your user type below</p>
       </div>
 
       <form class="register-form">
-
-        <!-- User Type Selection -->
-        <div class="user-type-selector">
-          <div class="user-type-option active" data-role="student">
-            <input type="radio" name="role" value="student" checked style="display:none"/>
-            <div class="type-icon">🧑‍🎓</div>
-            <div class="type-name">Student</div>
-            <div class="type-desc">Submit support tickets and view knowledge base</div>
-          </div>
-
-          <div class="user-type-option" data-role="faculty">
-            <input type="radio" name="role" value="faculty" style="display:none"/>
-            <div class="type-icon">👨‍🏫</div>
-            <div class="type-name">Faculty</div>
-            <div class="type-desc">Submit tickets and access faculty resources</div>
-          </div>
-
-          <div class="user-type-option" data-role="it_staff">
-            <input type="radio" name="role" value="it_staff" style="display:none"/>
-            <div class="type-icon">👨‍💻</div>
-            <div class="type-name">IT Staff</div>
-            <div class="type-desc">Manage assets, resolve tickets, manage users</div>
-          </div>
-
-          <div class="user-type-option" data-role="admin">
-            <input type="radio" name="role" value="admin" style="display:none"/>
-            <div class="type-icon">🛡️</div>
-            <div class="type-name">Administrator</div>
-            <div class="type-desc">Full system access, user management, reports</div>
-          </div>
-        </div>
-
-        <!-- Hidden input to capture selected role -->
-        <input type="hidden" id="selectedRole" name="role" value="student"/>
 
         <div class="form-group">
           <label class="form-label">NAME</label>
@@ -150,50 +63,6 @@
       </form>
     </main>
   </div>
-
-  <script>
-    // User type selector functionality
-    const userTypeOptions = document.querySelectorAll('.user-type-option');
-    const registerForm = document.querySelector('.register-form');
-    const selectedRoleInput = document.getElementById('selectedRole');
-
-    userTypeOptions.forEach(option => {
-      option.addEventListener('click', (e) => {
-        e.preventDefault();
-        
-        // Remove active class from all options
-        userTypeOptions.forEach(opt => opt.classList.remove('active'));
-        
-        // Add active class to clicked option
-        option.classList.add('active');
-        
-        // Get the role from data attribute
-        const role = option.getAttribute('data-role');
-        console.log('Selected role:', role);
-        
-        // Update the hidden input value
-        if (selectedRoleInput) {
-          selectedRoleInput.value = role;
-          console.log('Updated hidden role input to:', role);
-        }
-      });
-    });
-
-    // Set initial active state
-    const studentOption = document.querySelector('[data-role="student"]');
-    if (studentOption) {
-      studentOption.classList.add('active');
-      if (selectedRoleInput) {
-        selectedRoleInput.value = 'student';
-      }
-    }
-
-    // Debug: Log form data on submit
-    registerForm.addEventListener('submit', function(e) {
-      const roleValue = selectedRoleInput ? selectedRoleInput.value : 'UNKNOWN';
-      console.log('Form submission - Hidden role input value:', roleValue);
-    });
-  </script>
 
   <script src="/static/auth.js"></script>
 </body>

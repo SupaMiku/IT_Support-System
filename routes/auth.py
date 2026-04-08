@@ -50,9 +50,10 @@ def register():
             counter += 1
         username = f"{username}{counter}"
 
-    # Get role from request, default to student
-    role_name = data.get('role', 'student')
-    print(f"[REGISTER DEBUG] Received role: {role_name}")
+    # All new accounts are created as students
+    # Roles can only be changed manually in the database
+    role_name = 'student'
+    print(f"[REGISTER DEBUG] Creating new account with role: {role_name}")
     
     role = Role.query.filter_by(name=role_name).first()
     print(f"[REGISTER DEBUG] Role lookup result: {role}")

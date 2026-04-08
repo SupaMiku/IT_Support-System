@@ -73,7 +73,9 @@
     <option value="software">Software</option>
     <option value="account">Account</option>
   </select>
+  {% if current_user and current_user.role.name != 'student' %}
   <button class="btn-new" onclick="openNewArticleModal()">➕ New Article</button>
+  {% endif %}
 </div>
 
 <div class="kb-grid" id="kbGrid">
@@ -96,8 +98,10 @@
     </div>
     <div class="modal__foot">
       <button class="btn-sm" onclick="closeModal('readModal')">Close</button>
+      {% if current_user and current_user.role.name != 'student' %}
       <button class="btn-sm" id="editBtn" style="display:none" onclick="editCurrentArticle()">✏ Edit</button>
       <button class="btn-sm" id="deleteBtn" style="display:none;background:#dc3545;color:white;border-color:#dc3545" onclick="deleteCurrentArticle()">🗑 Delete</button>
+      {% endif %}
     </div>
   </div>
 </div>
@@ -147,6 +151,7 @@
 </div>
 
 <script>
+const currentUserRole = '{{ current_user.role.name if current_user else "" }}';
 let allArticles = [];
 let currentArticleId = null;
 
@@ -229,8 +234,8 @@ async function readArticle(id) {
     document.getElementById('readAuthor').textContent = article.author || 'Unknown';
     document.getElementById('readContent').textContent = article.content;
     
-    document.getElementById('editBtn').style.display = 'block';
-    document.getElementById('deleteBtn').style.display = 'block';
+    document.getElementById('editBtn').style.display = currentUserRole !== 'student' ? 'block' : 'none';
+    document.getElementById('deleteBtn').style.display = currentUserRole !== 'student' ? 'block' : 'none';
     
     openModal('readModal');
   } catch (err) {

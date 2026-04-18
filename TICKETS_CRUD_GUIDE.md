@@ -235,7 +235,6 @@ Comments table includes:
    - Database automatically seeds with sample tickets
    - Admin user: admin / Admin@1234
    - Staff member: itstaff / Staff@1234
-   - Faculty: mssantos / Teacher@1234
    - Student: juan2025 / Student@1234
 
 2. **Test workflow**:
@@ -250,7 +249,7 @@ Comments table includes:
 3. **Try all roles**:
    - Admin can do everything
    - Staff can manage tickets
-   - Faculty/Student can see own tickets
+   - Student can see own tickets
 
 ## 🐛 Troubleshooting
 

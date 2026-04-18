@@ -13,8 +13,8 @@ def current_user():
 def list_articles():
     q = KnowledgeBaseArticle.query
     user = current_user()
-    # non-staff only sees published
-    if not user or user.role.name not in ('admin', 'it_staff'):
+    # Only admin sees unpublished articles
+    if not user or user.role.name != 'admin':
         q = q.filter_by(is_published=True)
     if request.args.get('category'): q = q.filter_by(category=request.args['category'])
     if request.args.get('search'):
@@ -25,6 +25,10 @@ def list_articles():
 @kb_bp.route('/<int:article_id>', methods=['GET'])
 def get_article(article_id):
     article = KnowledgeBaseArticle.query.get_or_404(article_id)
+    user = current_user()
+    # Only admin can view unpublished articles
+    if not article.is_published and (not user or user.role.name != 'admin'):
+        return jsonify({'error': 'Access denied'}), 403
     article.views += 1
     db.session.commit()
     return jsonify(article.to_dict()), 200
@@ -32,8 +36,8 @@ def get_article(article_id):
 @kb_bp.route('/', methods=['POST'])
 def create_article():
     user = current_user()
-    if not user or user.role.name not in ('admin', 'it_staff'):
-        return jsonify({'error': 'Insufficient permissions'}), 403
+    if not user or user.role.name != 'admin':
+        return jsonify({'error': 'Admin only'}), 403
     data = request.get_json()
     a = KnowledgeBaseArticle(
         title=data['title'], content=data['content'],
@@ -47,8 +51,8 @@ def create_article():
 @kb_bp.route('/<int:article_id>', methods=['PUT'])
 def update_article(article_id):
     user = current_user()
-    if not user or user.role.name not in ('admin', 'it_staff'):
-        return jsonify({'error': 'Insufficient permissions'}), 403
+    if not user or user.role.name != 'admin':
+        return jsonify({'error': 'Admin only'}), 403
     article = KnowledgeBaseArticle.query.get_or_404(article_id)
     data = request.get_json()
     for f in ['title','content','category','is_published']:

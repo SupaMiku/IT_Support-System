@@ -13,8 +13,8 @@ def current_user():
 @users_bp.route('/', methods=['GET'])
 def list_users():
     user = current_user()
-    if not user or user.role.name not in ('admin', 'it_staff'):
-        return jsonify({'error': 'Insufficient permissions'}), 403
+    if not user or user.role.name != 'admin':
+        return jsonify({'error': 'Admin only'}), 403
     q = User.query.filter(User.is_active == True)  # Only show active users by default
     if request.args.get('role'):       q = q.join(Role).filter(Role.name == request.args['role'])
     if request.args.get('department'): q = q.filter(User.department.ilike(f"%{request.args['department']}%"))
@@ -61,7 +61,7 @@ def create_user():
 @users_bp.route('/<int:user_id>', methods=['GET'])
 def get_user(user_id):
     user = current_user()
-    if not user or (user.id != user_id and user.role.name not in ('admin','it_staff')):
+    if not user or (user.id != user_id and user.role.name != 'admin'):
         return jsonify({'error': 'Insufficient permissions'}), 403
     target = User.query.get_or_404(user_id)
     return jsonify(target.to_dict()), 200

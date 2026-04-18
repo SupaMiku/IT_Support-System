@@ -144,8 +144,66 @@ html, body {
   color: var(--text); font-family: 'Rajdhani', sans-serif; font-size: 0.88rem;
   padding: 7px 12px; outline: none; transition: border-color 0.2s;
 }
+
+/* Enhanced select styling for filter selects */
+.filter-select {
+  background-color: #1c1c1c;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d8d8d8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 18px;
+  padding-right: 32px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.filter-select option {
+  background-color: #2c2c2c;
+  color: #d8d8d8;
+  padding: 8px 12px;
+}
+
+.filter-select option:checked {
+  background-color: #376fa0 !important;
+  color: #ffffff !important;
+}
+
 .filter-select:focus, .filter-input:focus { border-color: var(--accent); }
-.filter-select option { background: var(--bg3); }
+
+/* Enhanced select styling for all category and priority filters */
+.category-filter, .priority-filter {
+  background-color: #1c1c1c;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d8d8d8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 18px;
+  padding-right: 32px;
+  appearance: none;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.category-filter option, .priority-filter option {
+  background-color: #2c2c2c;
+  color: #d8d8d8;
+  padding: 8px 12px;
+}
+
+.category-filter option:checked, .priority-filter option:checked {
+  background-color: #376fa0 !important;
+  color: #ffffff !important;
+}
+
+.category-filter:focus, .priority-filter:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(122, 179, 212, 0.1);
+}
 
 .btn {
   display: inline-flex; align-items: center; gap: 6px;
@@ -254,7 +312,54 @@ html, body {
 .form-control:focus { border-color: var(--accent); background: var(--bg4); }
 .form-control::placeholder { color: var(--text-muted); }
 textarea.form-control { resize: vertical; min-height: 90px; }
-select.form-control option { background: var(--bg3); }
+
+/* Enhanced select styling for better option visibility */
+select.form-control {
+  background-color: #1c1c1c;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d8d8d8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 18px;
+  padding-right: 32px;
+  appearance: none;
+  cursor: pointer;
+}
+
+select.form-control option {
+  background-color: #2c2c2c;
+  color: #d8d8d8;
+  padding: 8px 12px;
+  border: none;
+}
+
+select.form-control option:checked {
+  background: linear-gradient(#495057, #495057);
+  background-color: #376fa0 !important;
+  color: #ffffff !important;
+}
+
+/* Universal select styling for all selects */
+select {
+  background-color: #1c1c1c;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d8d8d8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 18px;
+  padding-right: 32px;
+  appearance: none;
+  cursor: pointer;
+}
+
+select option {
+  background-color: #2c2c2c;
+  color: #d8d8d8;
+  padding: 8px 12px;
+}
+
+select option:checked {
+  background-color: #376fa0 !important;
+  color: #ffffff !important;
+}
 
 /* ===================== EMPTY STATE ===================== */
 .empty-state { text-align: center; padding: 60px 20px; color: var(--text-dim); }
@@ -335,7 +440,7 @@ select.form-control option { background: var(--bg3); }
 .announce-actions { display: flex; gap: 6px; align-items: flex-start; }
 
 /* ===================== REPORT CHARTS ===================== */
-.reports-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
 .chart-container { padding: 18px; }
 .bar-chart { display: flex; flex-direction: column; gap: 10px; }
 .bar-row { display: flex; align-items: center; gap: 10px; }
@@ -376,7 +481,6 @@ select.form-control option { background: var(--bg3); }
 }
 .role-admin   { background: var(--danger-bg);  color: var(--danger); }
 .role-it_staff{ background: var(--accent-bg);  color: var(--accent); }
-.role-faculty { background: var(--purple-bg);  color: var(--purple); }
 .role-student { background: var(--green-bg);   color: var(--green); }
 .user-card__dept { font-size: 0.78rem; color: var(--text-dim); }
 .user-card__foot { display: flex; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px; }
@@ -408,7 +512,7 @@ select.form-control option { background: var(--bg3); }
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 1100px) {
   .stats-row { grid-template-columns: repeat(2,1fr); }
-  .reports-grid { grid-template-columns: 1fr; }
+
   .detail-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 900px) {

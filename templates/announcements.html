@@ -84,7 +84,7 @@
       <option value="urgent">Urgent</option>
     </select>
   </div>
-  {% if current_user and current_user.role.name != 'student' %}
+  {% if current_user and current_user.role.name == 'admin' %}
   <button class="btn-new" onclick="openNewAnnouncementModal()">📢 New Announcement</button>
   {% endif %}
 </div>
@@ -112,7 +112,7 @@
     </div>
     <div class="modal__foot">
       <button class="btn-sm" onclick="closeModal('readModal')">Close</button>
-      {% if current_user and current_user.role.name != 'student' %}
+      {% if current_user and current_user.role.name == 'admin' %}
       <button class="btn-sm" id="editBtn" style="display:none" onclick="editCurrentAnnouncement()">✏ Edit</button>
       <button class="btn-danger btn-sm" id="deleteBtn" style="display:none" onclick="deleteCurrentAnnouncement()">🗑 Delete</button>
       {% endif %}
@@ -216,7 +216,7 @@ function renderAnnouncements(announcements) {
       </div>
       <div class="announce-actions">
         <button class="btn-sm" onclick="readAnnouncement(${a.id})">Read</button>
-        ${currentUserRole !== 'student' ? `<button class="btn-sm" onclick="editAnnouncement(${a.id})">Edit</button><button class="btn-danger btn-sm" onclick="deleteAnnouncement(${a.id})">Delete</button>` : ''}
+        ${currentUserRole === 'admin' ? `<button class="btn-sm" onclick="editAnnouncement(${a.id})">Edit</button><button class="btn-danger btn-sm" onclick="deleteAnnouncement(${a.id})">Delete</button>` : ''}
       </div>
     </div>
   `).join('');
@@ -255,8 +255,8 @@ async function readAnnouncement(id) {
       document.getElementById('readExpires').style.display = 'none';
     }
     
-    document.getElementById('editBtn').style.display = currentUserRole !== 'student' ? 'block' : 'none';
-    document.getElementById('deleteBtn').style.display = currentUserRole !== 'student' ? 'block' : 'none';
+    document.getElementById('editBtn').style.display = currentUserRole === 'admin' ? 'block' : 'none';
+    document.getElementById('deleteBtn').style.display = currentUserRole === 'admin' ? 'block' : 'none';
     
     openModal('readModal');
   } catch (err) {

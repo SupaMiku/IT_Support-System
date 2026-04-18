@@ -34,12 +34,7 @@ files = {
 <p>The assets page has been replaced. Visit <a href=\"{{ url_for('assets_page') }}\">Asset Inventory</a>.</p>
 {% endblock %}
 """,
-    'templates/reports.html': """{% extends 'base.html' %}
-{% block title %}Legacy Reports{% endblock %}
-{% block content %}
-<p>Please view reports at <a href=\"{{ url_for('reports_page') }}\">Reports & Analytics</a>.</p>
-{% endblock %}
-""",
+
 }
 
 for path, content in files.items():

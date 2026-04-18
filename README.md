@@ -34,7 +34,6 @@ After first run, you can login with:
 |----------|-------|----------|------|
 | admin | admin@school.edu | Admin@1234 | Admin |
 | itstaff | staff@school.edu | Staff@1234 | IT Staff |
-| mssantos | santos@school.edu | Teacher@1234 | Faculty |
 | juan2025 | juan@school.edu | Student@1234 | Student |
 
 ## 🔧 Project Structure

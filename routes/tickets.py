@@ -40,11 +40,20 @@ def notify(user_id, title, message, link=None):
 @tickets_bp.route('/', methods=['GET'])
 def list_tickets():
     user = current_user()
+    
+    if not user:
+        return jsonify({'error': 'Authentication required'}), 401
+    
     q = Ticket.query
     
-    # Students can only see their own tickets
-    if user and user.role.name == 'student':
+    # Filter by user role - users only see their own tickets
+    if user.role.name == 'student':
+        # Students can only see tickets they created
         q = q.filter(Ticket.requester_id == user.id)
+    elif user.role.name == 'it_staff':
+        # IT staff can see ALL tickets made by users
+        pass
+    # Admin sees all tickets (no filter)
 
     status   = request.args.get('status')
     priority = request.args.get('priority')
@@ -102,9 +111,17 @@ def get_ticket(ticket_id):
     user = current_user()
     ticket = Ticket.query.get_or_404(ticket_id)
     
+    # Check access permissions
+    if not user:
+        return jsonify({'error': 'Authentication required'}), 401
+    
     # Students can only view their own tickets
-    if user and user.role.name == 'student' and ticket.requester_id != user.id:
-        return jsonify({'error': 'Access denied'}), 403
+    if user.role.name == 'student':
+        if ticket.requester_id != user.id:
+            return jsonify({'error': 'Access denied'}), 403
+    
+    # IT staff can view any ticket
+    # Admin can view all tickets (no check needed)
     
     return jsonify(ticket.to_dict()), 200
 
@@ -117,15 +134,24 @@ def update_ticket(ticket_id):
 
     ticket = Ticket.query.get_or_404(ticket_id)
     
-    # Students can only update their own tickets and cannot change status
+    # Check access permissions
     if user.role.name == 'student':
+        # Students can only update their own tickets
         if ticket.requester_id != user.id:
             return jsonify({'error': 'Access denied'}), 403
+    elif user.role.name == 'it_staff':
+        # IT staff can only update tickets if they can view them
+        # They cannot update assigned_to_id (assignment restricted to admin)
+        pass
+    # Admin can update any ticket (no check needed)
 
     data = request.get_json()
 
     for field in ['title', 'description', 'category', 'priority', 'status', 'location', 'assigned_to_id']:
         if field in data:
+            # Only admin can update assigned_to_id
+            if field == 'assigned_to_id' and user.role.name != 'admin':
+                continue
             # Students cannot update status, assigned_to_id, or priority
             if user.role.name == 'student' and field in ['status', 'assigned_to_id', 'priority']:
                 continue
@@ -168,9 +194,19 @@ def delete_ticket(ticket_id):
 # ── Comments ───────────────────────────────────────────────────────
 @tickets_bp.route('/<int:ticket_id>/comments', methods=['GET'])
 def list_comments(ticket_id):
-    ticket   = Ticket.query.get_or_404(ticket_id)
-    user     = current_user()
-    is_staff = user and user.role.name in ('admin', 'it_staff')
+    user = current_user()
+    if not user:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    ticket = Ticket.query.get_or_404(ticket_id)
+    
+    # Check access to ticket
+    if user.role.name == 'student':
+        if ticket.requester_id != user.id:
+            return jsonify({'error': 'Access denied'}), 403
+    # IT staff and admin can view comments on any ticket
+
+    is_staff = user.role.name in ('admin', 'it_staff')
 
     comments = ticket.comments
     if not is_staff:
@@ -185,18 +221,21 @@ def add_comment(ticket_id):
     if not user:
         return jsonify({'error': 'Authentication required'}), 401
 
-    # Only admin and it_staff can add comments
-    if user.role.name not in ('admin', 'it_staff'):
-        return jsonify({'error': 'Only IT staff and admins can comment on tickets'}), 403
-
     ticket = Ticket.query.get_or_404(ticket_id)
-    data   = request.get_json()
+    
+    # Check access to ticket
+    if user.role.name == 'student':
+        if ticket.requester_id != user.id:
+            return jsonify({'error': 'Access denied'}), 403
+    # IT staff and admin can add comments on any ticket
+
+    data = request.get_json()
 
     if not data.get('content'):
         return jsonify({'error': 'Comment content required'}), 400
 
     is_staff   = user.role.name in ('admin', 'it_staff')
-    is_internal= bool(data.get('is_internal')) and is_staff
+    is_internal = bool(data.get('is_internal')) and is_staff
 
     comment = TicketComment(
         ticket_id=ticket_id,

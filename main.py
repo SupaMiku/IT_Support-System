@@ -128,17 +128,16 @@ def create_app():
 
     @app.route('/users')
     def users_page():
-        """User Management page - Staff/Admin only"""
+        """User Management page - Admin only"""
         if 'user_id' not in session:
             return redirect(url_for('login'))
         from models import User
         user = User.query.get(session['user_id'])
-        # Only allow admin and it_staff
-        if user and user.role.name == 'student':
-            return redirect(url_for('tickets_page'))
+        # Only allow admin
+        if user and user.role.name != 'admin':
+            return redirect(url_for('dashboard'))
         role_counts = {
             'admins': User.query.join(User.role).filter_by(name='admin').count(),
-            'faculty': User.query.join(User.role).filter_by(name='faculty').count(),
             'students': User.query.join(User.role).filter_by(name='student').count(),
             'it_staff': User.query.join(User.role).filter_by(name='it_staff').count(),
             'total': User.query.count()
@@ -170,23 +169,6 @@ def create_app():
             'expiring': Announcement.query.filter(Announcement.expires_at != None).count()
         }
         return render_template('announcements.html', ann_stats=ann_stats)
-
-    @app.route('/reports')
-    def reports_page():
-        """Reports page - Staff/Admin only"""
-        if 'user_id' not in session:
-            return redirect(url_for('login'))
-        from models import User
-        user = User.query.get(session['user_id'])
-        # Only allow admin and it_staff
-        if user and user.role.name == 'student':
-            return redirect(url_for('tickets_page'))
-        # compute some sample KPI numbers based on real data
-        from models import Ticket
-        total = Ticket.query.count()
-        resolved = Ticket.query.filter_by(status='resolved').count()
-        resolution_rate = (resolved/total*100) if total else 0
-        return render_template('reports.html', resolution_rate=resolution_rate)
 
     @app.route('/profile')
     def profile_page():
@@ -265,9 +247,8 @@ def seed_data():
     # Roles
     admin_role   = Role(name='admin',   description='Full system access')
     staff_role   = Role(name='it_staff',description='IT staff – manage tickets & assets')
-    faculty_role = Role(name='faculty', description='Faculty – submit & view own tickets')
     student_role = Role(name='student', description='Student – submit tickets only')
-    db.session.add_all([admin_role, staff_role, faculty_role, student_role])
+    db.session.add_all([admin_role, staff_role, student_role])
     db.session.flush()
 
     # Users
@@ -290,15 +271,6 @@ def seed_data():
         department='IT Department',
         is_active=True
     )
-    teacher = User(
-        username='mssantos',
-        email='santos@school.edu',
-        password_hash=generate_password_hash('Teacher@1234'),
-        full_name='Ms. Santos',
-        role_id=faculty_role.id,
-        department='Science Department',
-        is_active=True
-    )
     student = User(
         username='juan2025',
         email='juan@school.edu',
@@ -308,7 +280,7 @@ def seed_data():
         department='Grade 11 - STEM',
         is_active=True
     )
-    db.session.add_all([admin, staff, teacher, student])
+    db.session.add_all([admin, staff, student])
     db.session.flush()
 
     # Tickets
@@ -319,7 +291,7 @@ def seed_data():
         category='hardware',
         priority='high',
         status='open',
-        requester_id=teacher.id,
+        requester_id=student.id,
         assigned_to_id=staff.id,
         location='Room 204'
     )
@@ -334,14 +306,14 @@ def seed_data():
         location='Library'
     )
     t3 = Ticket(
-        title='Printer offline – Faculty Room',
-        description='HP LaserJet in faculty room shows offline. Cannot print.',
+        title='Printer offline – Main Office',
+        description='HP LaserJet in main office shows offline. Cannot print.',
         category='hardware',
         priority='high',
         status='open',
-        requester_id=teacher.id,
+        requester_id=student.id,
         assigned_to_id=None,
-        location='Faculty Room'
+        location='Main Office'
     )
     t4 = Ticket(
         title='PC won\'t boot – Lab 3, Unit 07',
@@ -381,7 +353,7 @@ def seed_data():
         Asset(asset_tag='PC-LAB1-01', name='Desktop PC',    category='computer',  brand='Acer',    model='Aspire TC',     serial_number='SN001', status='active',      location='Computer Lab 1', purchase_date=date(2022,6,1),  purchase_cost=25000.0, assigned_to_id=None),
         Asset(asset_tag='PC-LAB3-07', name='Desktop PC',    category='computer',  brand='Dell',    model='OptiPlex 3080', serial_number='SN007', status='maintenance', location='Computer Lab 3', purchase_date=date(2021,3,15), purchase_cost=28000.0, assigned_to_id=None),
         Asset(asset_tag='LPT-ADMIN-01',name='Laptop',       category='laptop',    brand='Lenovo',  model='ThinkPad E14',  serial_number='SN050', status='active',      location='Admin Office',   purchase_date=date(2023,1,10), purchase_cost=42000.0, assigned_to_id=admin.id),
-        Asset(asset_tag='PRN-FAC-01', name='Laser Printer', category='printer',   brand='HP',      model='LaserJet M404', serial_number='SN101', status='inactive',    location='Faculty Room',   purchase_date=date(2020,8,20), purchase_cost=15000.0, assigned_to_id=None),
+        Asset(asset_tag='PRN-OFF-01', name='Laser Printer', category='printer',   brand='HP',      model='LaserJet M404', serial_number='SN101', status='inactive',    location='Main Office',    purchase_date=date(2020,8,20), purchase_cost=15000.0, assigned_to_id=None),
         Asset(asset_tag='PRJ-R204-01',name='Projector',     category='projector', brand='Epson',   model='EB-X41',        serial_number='SN201', status='maintenance', location='Room 204',       purchase_date=date(2021,5,10), purchase_cost=35000.0, assigned_to_id=None),
         Asset(asset_tag='AP-LIB-01',  name='Access Point',  category='network',   brand='Cisco',   model='Aironet 1815',  serial_number='SN301', status='active',      location='Library',        purchase_date=date(2022,9,5),  purchase_cost=12000.0, assigned_to_id=None),
         Asset(asset_tag='SWT-IT-01',  name='Network Switch',category='network',   brand='Cisco',   model='Catalyst 2960', serial_number='SN302', status='active',      location='IT Room',        purchase_date=date(2020,1,15), purchase_cost=18000.0, assigned_to_id=None),
@@ -405,7 +377,7 @@ def seed_data():
     articles = [
         KnowledgeBaseArticle(
             title='How to Connect to SchoolNet WiFi',
-            content='1. Click the WiFi icon on your taskbar.\n2. Select "SchoolNet" from the list.\n3. Enter your student/faculty credentials.\n4. Click Connect.',
+            content='1. Click the WiFi icon on your taskbar.\n2. Select "SchoolNet" from the list.\n3. Enter your credentials.\n4. Click Connect.',
             category='network',
             author_id=admin.id,
             is_published=True,

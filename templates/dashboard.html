@@ -88,7 +88,7 @@
     {% endif %}
   </div>
 
-  <!-- RIGHT: SYSTEM STATUS + QUICK ACTIONS -->
+  <!-- RIGHT: SYSTEM STATUS -->
   <div class="right-col">
     <!-- System Status Panel -->
     <div class="panel">
@@ -119,23 +119,10 @@
         </li>
       </ul>
     </div>
-
-    <!-- Quick Actions -->
-    <div class="panel">
-      <div class="panel__head">
-        <span class="panel__title">Quick Actions</span>
-      </div>
-      <div class="quick-actions">
-        <button class="quick-btn" onclick="alert('Create ticket feature coming soon')">➕ Create Ticket</button>
-        <button class="quick-btn" onclick="alert('Report feature coming soon')">📊 New Report</button>
-        <button class="quick-btn" onclick="alert('User management coming soon')">👤 Add User</button>
-        <button class="quick-btn" onclick="alert('Asset management coming soon')">📦 Add Asset</button>
-      </div>
-    </div>
   </div>
 </div>
 
-<!-- ===== BOTTOM ROW: CHART + ACTIVITY + ASSETS ===== -->
+<!-- ===== BOTTOM ROW: CHART + ASSETS ===== -->
 <div class="bottom-row">
   <!-- Ticket Distribution Donut Chart -->
   <div class="panel chart-panel">
@@ -160,51 +147,6 @@
       <li><span class="dot" style="background: #4caf82;"></span> Resolved <strong>{{ stats.resolved_tickets }}</strong></li>
       <li><span class="dot" style="background: #e0a840;"></span> In Progress <strong>0</strong></li>
       <li><span class="dot" style="background: #e05555;"></span> Critical <strong>0</strong></li>
-    </ul>
-  </div>
-
-  <!-- Activity Feed -->
-  <div class="panel">
-    <div class="panel__head">
-      <span class="panel__title">Activity</span>
-      <a href="#" class="panel__link">View All →</a>
-    </div>
-    <ul class="activity-list">
-      <li class="activity-item">
-        <span class="act-dot resolved"></span>
-        <div class="act-body">
-          <p><strong>Ticket #T-005</strong> marked resolved by Admin User</p>
-          <time>Today, 2:15 PM</time>
-        </div>
-      </li>
-      <li class="activity-item">
-        <span class="act-dot open"></span>
-        <div class="act-body">
-          <p><strong>New ticket</strong> submitted: Projector Room 204</p>
-          <time>Today, 1:43 PM</time>
-        </div>
-      </li>
-      <li class="activity-item">
-        <span class="act-dot asset"></span>
-        <div class="act-body">
-          <p><strong>Asset SRV-IT-01</strong> maintenance logged</p>
-          <time>Yesterday, 4:22 PM</time>
-        </div>
-      </li>
-      <li class="activity-item">
-        <span class="act-dot announce"></span>
-        <div class="act-body">
-          <p><strong>Announcement</strong> published: Network Maintenance</p>
-          <time>Yesterday, 10:05 AM</time>
-        </div>
-      </li>
-      <li class="activity-item">
-        <span class="act-dot user"></span>
-        <div class="act-body">
-          <p><strong>New user</strong> added: juan@school.edu</p>
-          <time>Mar 1, 2026</time>
-        </div>
-      </li>
     </ul>
   </div>
 

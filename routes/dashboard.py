@@ -1,7 +1,7 @@
 """Dashboard summary route – /api/dashboard"""
-from flask import Blueprint, jsonify, session
+from flask import Blueprint, jsonify, session, request
 from database import db
-from models import Ticket, Asset, User, Announcement, AuditLog
+from models import Ticket, Asset, User, Announcement, AuditLog, Notification
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
@@ -58,3 +58,46 @@ def summary():
         'recent_activity':recent_activity,
         'announcements':  announcements,
     }), 200
+
+
+@dashboard_bp.route('/notifications', methods=['GET'])
+def get_notifications():
+    """Get user's notifications"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    notifications = Notification.query.filter_by(user_id=user_id)\
+        .order_by(Notification.created_at.desc()).all()
+    
+    return jsonify([n.to_dict() for n in notifications]), 200
+
+
+@dashboard_bp.route('/notifications/<int:notif_id>/read', methods=['PUT'])
+def mark_notification_read(notif_id):
+    """Mark notification as read"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    notification = Notification.query.get_or_404(notif_id)
+    
+    # Only user who owns the notification can mark it as read
+    if notification.user_id != user_id:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    notification.is_read = True
+    db.session.commit()
+    
+    return jsonify(notification.to_dict()), 200
+
+
+@dashboard_bp.route('/notifications/unread-count', methods=['GET'])
+def unread_notification_count():
+    """Get count of unread notifications"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    count = Notification.query.filter_by(user_id=user_id, is_read=False).count()
+    return jsonify({'unread_count': count}), 200

@@ -146,6 +146,10 @@ def update_ticket(ticket_id):
     # Admin can update any ticket (no check needed)
 
     data = request.get_json()
+    
+    # Store old assignment to detect changes
+    old_assigned_to_id = ticket.assigned_to_id
+    new_assigned_to_id = None
 
     for field in ['title', 'description', 'category', 'priority', 'status', 'location', 'assigned_to_id']:
         if field in data:
@@ -155,6 +159,11 @@ def update_ticket(ticket_id):
             # Students cannot update status, assigned_to_id, or priority
             if user.role.name == 'student' and field in ['status', 'assigned_to_id', 'priority']:
                 continue
+            
+            # Track the new assignment value
+            if field == 'assigned_to_id':
+                new_assigned_to_id = data[field]
+            
             setattr(ticket, field, data[field])
 
     if data.get('status') == 'resolved' and not ticket.resolved_at:
@@ -164,10 +173,21 @@ def update_ticket(ticket_id):
         ticket.due_date = datetime.fromisoformat(data['due_date'])
 
     log_action(user.id, 'ticket.update', target_id=ticket.id, details=str(data))
-    notify(ticket.requester_id,
-           f'Ticket #{ticket.id} updated',
-           f'Status changed to {ticket.status}',
-           link=f'/tickets/{ticket.id}')
+    
+    # Notify assigned IT staff when ticket is assigned to them
+    if new_assigned_to_id and new_assigned_to_id != old_assigned_to_id:
+        print(f"[DEBUG] Notifying user {new_assigned_to_id} about ticket assignment")
+        notify(new_assigned_to_id,
+               f'New ticket assigned: #{ticket.id}',
+               ticket.title,
+               link=f'/tickets/{ticket.id}')
+    
+    # Notify requester about status updates
+    if data.get('status'):
+        notify(ticket.requester_id,
+               f'Ticket #{ticket.id} updated',
+               f'Status changed to {ticket.status}',
+               link=f'/tickets/{ticket.id}')
 
     db.session.commit()
     return jsonify(ticket.to_dict()), 200

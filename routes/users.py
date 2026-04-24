@@ -1,6 +1,7 @@
 """Users routes – /api/users"""
 from flask import Blueprint, request, jsonify, session
 from werkzeug.security import generate_password_hash
+from sqlalchemy import or_
 from database import db
 from models import User, Role
 
@@ -98,10 +99,15 @@ def list_staff():
     staff_role = Role.query.filter_by(name='it_staff').first()
     admin_role = Role.query.filter_by(name='admin').first()
     
+    role_ids = []
+    if staff_role:
+        role_ids.append(staff_role.id)
+    if admin_role:
+        role_ids.append(admin_role.id)
+    
     staff = User.query.filter(
         User.is_active == True,
-        ((User.role_id == staff_role.id if staff_role else False) or 
-         (User.role_id == admin_role.id if admin_role else False))
+        User.role_id.in_(role_ids)
     ).order_by(User.full_name).all()
     
     return jsonify([{'id': u.id, 'full_name': u.full_name} for u in staff]), 200

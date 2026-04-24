@@ -195,12 +195,17 @@
                 <span class="meta-label">Requester</span>
                 <span id="detailRequester">-</span>
               </div>
-              {% if current_user and current_user.role.name != 'student' %}
+              {% if current_user and current_user.role.name == 'admin' %}
               <div class="meta-item">
                 <span class="meta-label">Assigned To</span>
                 <select id="detailAssignedTo" onchange="updateTicketField('assigned_to_id')">
                   <option value="">Unassigned</option>
                 </select>
+              </div>
+              {% else %}
+              <div class="meta-item">
+                <span class="meta-label">Assigned To</span>
+                <span id="detailAssignedToView">-</span>
               </div>
               {% endif %}
               <div class="meta-item">
@@ -258,17 +263,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function loadStaffUsers() {
   try {
     const response = await fetch('/api/users/staff');
+    if (!response.ok) throw new Error('Failed to fetch staff');
     staffUsers = await response.json();
-    const select = document.getElementById('detailAssignedTo');
-    staffUsers.forEach(user => {
-      const option = document.createElement('option');
-      option.value = user.id;
-      option.textContent = user.full_name;
-      select.appendChild(option);
-    });
+    console.log('Staff users loaded:', staffUsers);
   } catch (e) {
     console.error('Error loading staff users:', e);
+    staffUsers = [];
   }
+}
+
+function populateStaffDropdown() {
+  const select = document.getElementById('detailAssignedTo');
+  if (!select) return;
+  
+  // Clear existing options except "Unassigned"
+  while (select.options.length > 1) {
+    select.remove(1);
+  }
+  
+  // Add staff users
+  staffUsers.forEach(user => {
+    const option = document.createElement('option');
+    option.value = user.id;
+    option.textContent = user.full_name;
+    select.appendChild(option);
+  });
 }
 
 async function loadTickets() {
@@ -422,9 +441,18 @@ async function openDetailModal(ticketId) {
       priorityField.textContent = ticket.priority;
     }
     
+    // Populate staff dropdown before setting value
+    populateStaffDropdown();
+    
     const assignedField = document.getElementById('detailAssignedTo');
     if (assignedField) {
       assignedField.value = ticket.assigned_to_id || '';
+    }
+    
+    // Show assigned staff member name in read-only view for IT staff/students
+    const assignedViewField = document.getElementById('detailAssignedToView');
+    if (assignedViewField) {
+      assignedViewField.textContent = ticket.assigned_to || '-';
     }
     
     document.getElementById('detailCreated').textContent = new Date(ticket.created_at).toLocaleString();

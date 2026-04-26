@@ -51,8 +51,8 @@ def list_tickets():
         # Students can only see tickets they created
         q = q.filter(Ticket.requester_id == user.id)
     elif user.role.name == 'it_staff':
-        # IT staff can see ALL tickets made by users
-        pass
+        # IT staff can only see tickets assigned to them
+        q = q.filter(Ticket.assigned_to_id == user.id)
     # Admin sees all tickets (no filter)
 
     status   = request.args.get('status')
@@ -119,8 +119,10 @@ def get_ticket(ticket_id):
     if user.role.name == 'student':
         if ticket.requester_id != user.id:
             return jsonify({'error': 'Access denied'}), 403
-    
-    # IT staff can view any ticket
+    # IT staff can only view tickets assigned to them
+    elif user.role.name == 'it_staff':
+        if ticket.assigned_to_id != user.id:
+            return jsonify({'error': 'Access denied'}), 403
     # Admin can view all tickets (no check needed)
     
     return jsonify(ticket.to_dict()), 200
@@ -147,14 +149,19 @@ def update_ticket(ticket_id):
 
     data = request.get_json()
     
-    # Store old assignment to detect changes
+    # Store old values to detect changes
     old_assigned_to_id = ticket.assigned_to_id
+    old_status = ticket.status
     new_assigned_to_id = None
+    status_changed = False
 
     for field in ['title', 'description', 'category', 'priority', 'status', 'location', 'assigned_to_id']:
         if field in data:
             # Only admin can update assigned_to_id
             if field == 'assigned_to_id' and user.role.name != 'admin':
+                continue
+            # Only admin can close tickets
+            if field == 'status' and data[field] == 'closed' and user.role.name != 'admin':
                 continue
             # Students cannot update status, assigned_to_id, or priority
             if user.role.name == 'student' and field in ['status', 'assigned_to_id', 'priority']:
@@ -163,6 +170,10 @@ def update_ticket(ticket_id):
             # Track the new assignment value
             if field == 'assigned_to_id':
                 new_assigned_to_id = data[field]
+            
+            # Track status changes
+            if field == 'status' and data[field] != old_status:
+                status_changed = True
             
             setattr(ticket, field, data[field])
 
@@ -173,6 +184,16 @@ def update_ticket(ticket_id):
         ticket.due_date = datetime.fromisoformat(data['due_date'])
 
     log_action(user.id, 'ticket.update', target_id=ticket.id, details=str(data))
+    
+    # Create audit trail comment for status changes (internal, staff only)
+    if status_changed:
+        audit_comment = TicketComment(
+            ticket_id=ticket.id,
+            author_id=user.id,
+            content=f'Status changed from "{old_status}" to "{ticket.status}" by {user.full_name}',
+            is_internal=True
+        )
+        db.session.add(audit_comment)
     
     # Notify assigned IT staff when ticket is assigned to them
     if new_assigned_to_id and new_assigned_to_id != old_assigned_to_id:
@@ -224,7 +245,11 @@ def list_comments(ticket_id):
     if user.role.name == 'student':
         if ticket.requester_id != user.id:
             return jsonify({'error': 'Access denied'}), 403
-    # IT staff and admin can view comments on any ticket
+    # IT staff can only view comments on tickets assigned to them
+    elif user.role.name == 'it_staff':
+        if ticket.assigned_to_id != user.id:
+            return jsonify({'error': 'Access denied'}), 403
+    # Admin can view comments on any ticket
 
     is_staff = user.role.name in ('admin', 'it_staff')
 
@@ -247,7 +272,11 @@ def add_comment(ticket_id):
     if user.role.name == 'student':
         if ticket.requester_id != user.id:
             return jsonify({'error': 'Access denied'}), 403
-    # IT staff and admin can add comments on any ticket
+    # IT staff can only add comments on tickets assigned to them
+    elif user.role.name == 'it_staff':
+        if ticket.assigned_to_id != user.id:
+            return jsonify({'error': 'Access denied'}), 403
+    # Admin can add comments on any ticket
 
     data = request.get_json()
 

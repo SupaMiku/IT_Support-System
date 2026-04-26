@@ -96,8 +96,16 @@ def create_app():
                 'resolved': Ticket.query.filter_by(status='resolved', requester_id=user.id).count(),
                 'critical': Ticket.query.filter_by(priority='critical', requester_id=user.id).count(),
             }
+        elif user and user.role.name == 'it_staff':
+            # IT staff only see their assigned ticket stats
+            ticket_stats = {
+                'open': Ticket.query.filter_by(status='open', assigned_to_id=user.id).count(),
+                'in_progress': Ticket.query.filter_by(status='in_progress', assigned_to_id=user.id).count(),
+                'resolved': Ticket.query.filter_by(status='resolved', assigned_to_id=user.id).count(),
+                'critical': Ticket.query.filter_by(priority='critical', assigned_to_id=user.id).count(),
+            }
         else:
-            # Staff and admin see all ticket stats
+            # Admin sees all ticket stats
             ticket_stats = {
                 'open': Ticket.query.filter_by(status='open').count(),
                 'in_progress': Ticket.query.filter_by(status='in_progress').count(),

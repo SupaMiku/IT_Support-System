@@ -43,6 +43,30 @@ html, body {
 ::-webkit-scrollbar-track { background: var(--bg2); }
 ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
 
+/* Thicker scrollbar for notifications panel */
+.notifications-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.notifications-list::-webkit-scrollbar-track {
+  background: var(--bg3);
+}
+
+.notifications-list::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+.notifications-list::-webkit-scrollbar-thumb:hover {
+  background: #9ac9e8;
+}
+
+/* Firefox scrollbar */
+.notifications-list {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) var(--bg3);
+}
+
 /* ===================== SIDEBAR ===================== */
 .sidebar {
   position: fixed; top: 0; left: 0;
@@ -171,7 +195,7 @@ html, body {
   top: 100%;
   right: 0;
   width: 380px;
-  max-height: 500px;
+  max-height: 400px;
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -180,6 +204,8 @@ html, body {
   display: flex;
   flex-direction: column;
   z-index: 1000;
+  overflow: hidden;
+  contain: layout;
 }
 
 .notifications-header {
@@ -216,9 +242,11 @@ html, body {
 
 .notifications-list {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: scroll;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  max-height: calc(400px - 50px);
 }
 
 .notification-empty {

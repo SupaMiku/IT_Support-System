@@ -43,7 +43,9 @@
     <option value="in_progress">In Progress</option>
     <option value="on_hold">On Hold</option>
     <option value="resolved">Resolved</option>
+    {% if current_user.role.name == 'admin' %}
     <option value="closed">Closed</option>
+    {% endif %}
   </select>
   <select id="priorityFilter" onchange="applyFilters()">
     <option value="">All Priority</option>
@@ -161,7 +163,9 @@
                   <option value="in_progress">In Progress</option>
                   <option value="on_hold">On Hold</option>
                   <option value="resolved">Resolved</option>
+                  {% if current_user.role.name == 'admin' %}
                   <option value="closed">Closed</option>
+                  {% endif %}
                 </select>
                 {% else %}
                 <span id="detailStatus">Open</span>
